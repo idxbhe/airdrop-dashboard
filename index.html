@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="icon" type="image/png" href="https://e7.pngegg.com/pngimages/710/283/png-clipart-computer-icons-command-line-interface-cmd-exe-save-command-line-miscellaneous-angle.png">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="top-bar">
+        <div class="logo">AIRDROP_TERMINAL</div>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search entries...">
+            <button class="btn btn-accent" onclick="openCatModal()">📂 NEW CATEGORY</button>
+            <button class="btn" id="masterEditBtn" onclick="toggleEdit()">⚙️ EDIT MODE: OFF</button>
+        </div>
+    </header>
+
+    <div class="board" id="mainBoard"></div>
+
+    <div class="modal-overlay" id="entryModal">
+        <div class="modal">
+            <h3 id="entryModalTitle">ADD NEW ENTRY</h3>
+            <input type="text" id="inpT" placeholder="Title (Enter to next)">
+            <input type="text" id="inpU" placeholder="URL (Optional)">
+            <textarea id="inpN" placeholder="Notes/Description (Optional)" rows="3"></textarea>
+            <select id="inpReset">
+                <option value="">No Reset</option>
+                <option value="daily">Daily Reset</option>
+                <option value="weekly">Weekly Reset</option>
+                <option value="monthly">Monthly Reset</option>
+            </select>
+            <div class="modal-foot">
+                <button class="btn" onclick="closeModal('entryModal')">CANCEL</button>
+                <button class="btn btn-accent" id="btnSaveItem">SAVE ENTRY</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="catModal">
+        <div class="modal">
+            <h3>CREATE CATEGORY</h3>
+            <input type="text" id="inpCatName" placeholder="Category Name (ex: Daily Task, Mainnet)">
+            <div class="modal-foot">
+                <button class="btn" onclick="closeModal('catModal')">CANCEL</button>
+                <button class="btn btn-accent" onclick="submitCat()">CREATE</button>
+            </div>
+        </div>
+    </div>
+
+
+	<script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
