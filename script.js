@@ -1,4 +1,4 @@
-// ==================== AIRDROP TERMINAL v12 (AUTO SORTING CHECKED ITEMS) ====================
+// ==================== AIRDROP TERMINAL v13.2 (SEARCH AUTO UNFOLD + EDIT CATEGORY) ====================
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -35,49 +35,91 @@ function startLoadingProcess() {
 }
 
 // =============================================
-// HELPER: HITUNG WAKTU RESET
+// 2. EDIT CATEGORY TITLE (baru)
 // =============================================
-function getRemainingTime(item) {
-    const type = item.dataset.resetType;
-    if (!type) return Infinity;
-    const last = parseInt(item.dataset.lastCompleted) || 0;
-    if (last === 0) return Infinity; // belum dicentang
-
-    const duration = type === 'daily' ? 86400000 : type === 'weekly' ? 604800000 : 2592000000;
-    return (last + duration) - Date.now();
+function editColumnTitle(id) {
+    const col = document.getElementById(`col-${id}`);
+    const titleEl = col.querySelector('.col-title');
+    const newTitle = prompt('Ubah nama kategori:', titleEl.innerText.trim());
+    if (newTitle && newTitle.trim() !== '') {
+        titleEl.innerText = newTitle.trim();
+        saveData();
+    }
 }
 
 // =============================================
-// AUTO SORTING (FITUR UTAMA)
+// 3. SEARCH + AUTO UNFOLD (diperbaiki)
+// =============================================
+function handleSearch(e) {
+    const query = e.target.value.toLowerCase().trim();
+
+    document.querySelectorAll('.item').forEach(it => {
+        const title = it.querySelector('.item-title').innerText.toLowerCase();
+        const url = it.dataset.url.toLowerCase();
+        const match = title.includes(query) || url.includes(query);
+        it.classList.toggle('hidden', !match);
+    });
+
+    // AUTO UNFOLD kolom yang ada hasil pencarian
+    document.querySelectorAll('.column').forEach(col => {
+        const hasVisible = Array.from(col.querySelectorAll('.item')).some(item => 
+            !item.classList.contains('hidden')
+        );
+        if (hasVisible) {
+            col.classList.remove('collapsed');
+        }
+    });
+}
+
+// =============================================
+// 4. HELPER RESET TIME (dari versi sebelumnya)
+// =============================================
+function getResetRemaining(item) {
+    const type = item.dataset.resetType || '';
+    if (!type || type === 'checklist') return Infinity;
+
+    const last = parseInt(item.dataset.lastCompleted) || 0;
+    const now = Date.now();
+
+    if (type.startsWith('clock:') || type === 'custom') {
+        const timeStr = type.startsWith('clock:') ? type.substring(6) : (item.dataset.resetTime || '00:00');
+        const [h, m] = timeStr.split(':').map(Number);
+        let resetToday = new Date(now);
+        resetToday.setHours(h, m, 0, 0);
+        const resetMs = resetToday.getTime();
+        return resetMs > now ? resetMs - now : resetMs + 86400000 - now;
+    } else {
+        const duration = type === 'daily' ? 86400000 : type === 'weekly' ? 604800000 : 2592000000;
+        return last > 0 ? (last + duration) - now : Infinity;
+    }
+}
+
+// =============================================
+// 5. AUTO SORTING
 // =============================================
 function sortColumn(colId) {
     const body = document.getElementById(`body-${colId}`);
     if (!body) return;
 
-    const allItems = Array.from(body.children);
-
-    // Pisahkan unchecked (active) dan checked (completed)
-    const unchecked = allItems.filter(it => {
+    const items = Array.from(body.children);
+    const unchecked = items.filter(it => {
         const chk = it.querySelector('.chk-box');
         return !chk || !chk.checked;
     });
-
-    const checked = allItems.filter(it => {
+    const checked = items.filter(it => {
         const chk = it.querySelector('.chk-box');
         return chk && chk.checked;
     });
 
-    // Sort checked items: makin dekat reset = makin atas
-    checked.sort((a, b) => getRemainingTime(a) - getRemainingTime(b));
+    checked.sort((a, b) => getResetRemaining(a) - getResetRemaining(b));
 
-    // Kosongkan kolom lalu susun ulang
     body.innerHTML = '';
-    unchecked.forEach(item => body.appendChild(item));
-    checked.forEach(item => body.appendChild(item));
+    unchecked.forEach(i => body.appendChild(i));
+    checked.forEach(i => body.appendChild(i));
 }
 
 // =============================================
-// CREATE COLUMN & RENDER
+// 6. CREATE COLUMN (tombol edit ditambahkan)
 // =============================================
 function createColumn(id, title, isCollapsed = false, width = 300) {
     const board = document.getElementById('mainBoard');
@@ -92,6 +134,7 @@ function createColumn(id, title, isCollapsed = false, width = 300) {
             <span class="col-title">${title}</span>
             <div class="action-btns">
                 <button class="btn-icon" onclick="openEntryModal('${id}')">➕</button>
+                <button class="btn-icon edit-only" onclick="editColumnTitle('${id}')">✏️</button>
                 <button class="btn-icon edit-only" onclick="deleteCol('${id}')">🗑️</button>
             </div>
         </div>
@@ -100,14 +143,12 @@ function createColumn(id, title, isCollapsed = false, width = 300) {
     `;
 
     board.appendChild(col);
-    Sortable.create(document.getElementById(`body-${id}`), { 
-        group: 'airdrop', 
-        animation: 150, 
-        onEnd: () => { saveData(); } 
-    });
+    Sortable.create(document.getElementById(`body-${id}`), { group: 'airdrop', animation: 150, onEnd: saveData });
     if (isEditMode) initResize(col);
     return col;
 }
+
+// (semua fungsi lain tetap sama seperti versi v13.1 sebelumnya — addItemToDOM, saveData, toggleCheck, updateAllCountdowns, openEntryModal, handleResetTypeChange, dll.)
 
 function renderAllData(data) {
     const board = document.getElementById('mainBoard');
@@ -119,48 +160,49 @@ function renderAllData(data) {
     }
     data.forEach(c => {
         const col = createColumn(c.id, c.title, c.coll || false, c.width || 300);
-        if (c.items) c.items.forEach(i => addItemToDOM(c.id, i.t, i.u, i.n, i.r, i.lc, i.c, i.id));
-        sortColumn(c.id); // auto sort saat render
+        if (c.items) c.items.forEach(i => addItemToDOM(c.id, i.t, i.u, i.n, i.r, i.rt, i.lc, i.c, i.id));
+        sortColumn(c.id);
     });
     updateAllCountdowns();
 }
 
-function addItemToDOM(colId, title, url, note, resetType, lastCompleted, checked, id) {
+function addItemToDOM(colId, title, url, note, resetType, resetTime, lastCompleted, checked, id) {
     const isUrl = url && url.startsWith('http');
     let faviconSrc = '';
     if (isUrl) {
         try { faviconSrc = `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}`; } catch(e) {}
     }
+    const hasCheckbox = resetType !== '' && resetType !== 'noreset';
+
     const it = document.createElement('div');
     it.className = 'item';
     it.id = id;
     it.dataset.url = url || '';
     it.dataset.note = note || '';
     it.dataset.resetType = resetType || '';
+    it.dataset.resetTime = resetTime || '';
     it.dataset.lastCompleted = lastCompleted || 0;
 
     const titleStyle = checked ? 'text-decoration:line-through; opacity:0.4' : '';
+
     it.innerHTML = `
         <div class="item-main">
             <span class="btn-icon note-fold" onclick="toggleNote('${id}')">▶</span>
             <div class="fav-box" style="${isUrl && faviconSrc ? '' : 'display:none'}"><img class="fav-img" src="${faviconSrc}"></div>
             <span class="item-title" style="${titleStyle}">${title}</span>
             <div class="action-btns">
-                ${!!resetType ? `<input type="checkbox" class="chk-box" ${checked?'checked':''} onchange="toggleCheck('${id}')">` : ''}
+                ${hasCheckbox ? `<input type="checkbox" class="chk-box" ${checked?'checked':''} onchange="toggleCheck('${id}')">` : ''}
                 ${isUrl ? `<a href="${url}" target="_blank" class="btn-open-link">OPEN ↗</a>` : ''}
                 <button class="btn-icon edit-only" onclick="openEntryModal('${colId}','${id}');event.stopPropagation();">✏️</button>
                 <button class="btn-icon edit-only" onclick="deleteItem('${id}');event.stopPropagation();">❌</button>
             </div>
         </div>
-        ${!!resetType ? `<span class="reset-status"></span>` : ''}
+        ${hasCheckbox ? `<span class="reset-status"></span>` : ''}
         <div class="note-preview" id="note-${id}">${note||''}</div>
     `;
     document.getElementById(`body-${colId}`).appendChild(it);
 }
 
-// =============================================
-// SAVE
-// =============================================
 function saveData() {
     if (isLoading) return;
     const data = [];
@@ -173,6 +215,7 @@ function saveData() {
                 u: i.dataset.url, 
                 n: i.dataset.note, 
                 r: i.dataset.resetType || '', 
+                rt: i.dataset.resetTime || '',
                 lc: parseInt(i.dataset.lastCompleted) || 0, 
                 c: i.querySelector('.chk-box')?.checked || false 
             });
@@ -189,29 +232,78 @@ function saveData() {
     db.ref('dashboard_data').set(data);
 }
 
-// =============================================
-// TOGGLE CHECK + AUTO SORT
-// =============================================
+// === FUNGSI LAINNYA (toggleCheck, updateAllCountdowns, openEntryModal, dll.) ===
 function toggleCheck(id) {
     const it = document.getElementById(id);
     const chk = it.querySelector('.chk-box');
     const title = it.querySelector('.item-title');
-    
     title.style.textDecoration = chk.checked ? 'line-through' : 'none';
     title.style.opacity = chk.checked ? '0.4' : '1';
-    
     it.dataset.lastCompleted = chk.checked ? Date.now() : 0;
-
-    // Auto sort setelah di-check
-    const col = it.closest('.column');
-    const colId = col.id.replace('col-', '');
+    const colId = it.closest('.column').id.replace('col-', '');
     saveData();
     sortColumn(colId);
 }
 
-// =============================================
-// FUNGSI LAINNYA (sama seperti sebelumnya)
-// =============================================
+function updateAllCountdowns() {
+    const now = Date.now();
+    let needSave = false;
+    document.querySelectorAll('.item').forEach(it => {
+        const type = it.dataset.resetType || '';
+        if (!type || type === 'checklist') return;
+        const statusEl = it.querySelector('.reset-status');
+        const lastComp = parseInt(it.dataset.lastCompleted) || 0;
+        if (lastComp === 0) {
+            if (statusEl) statusEl.innerText = "Ready to complete";
+        } else {
+            let remaining = getResetRemaining(it);
+            if (remaining <= 0) {
+                const chk = it.querySelector('.chk-box');
+                const title = it.querySelector('.item-title');
+                if (chk) chk.checked = false;
+                if (title) { title.style.textDecoration = 'none'; title.style.opacity = '1'; }
+                it.dataset.lastCompleted = 0;
+                needSave = true;
+                if (statusEl) statusEl.innerText = "Ready to complete";
+            } else {
+                const h = Math.floor(remaining / 3600000).toString().padStart(2, '0');
+                const m = Math.floor((remaining % 3600000) / 60000).toString().padStart(2, '0');
+                const s = Math.floor((remaining % 60000) / 1000).toString().padStart(2, '0');
+                if (statusEl) statusEl.innerText = `Resets in ${h}:${m}:${s}`;
+            }
+        }
+    });
+    if (needSave) {
+        if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+        saveDebounceTimer = setTimeout(saveData, 300);
+    }
+}
+
+function handleResetTypeChange() {
+    const val = document.getElementById('inpReset').value;
+    document.getElementById('inpCustomTime').style.display = (val === 'custom') ? 'block' : 'none';
+}
+
+function openEntryModal(colId, itemId = null) {
+    activeColId = colId; activeItemId = itemId;
+    const it = itemId ? document.getElementById(itemId) : null;
+    document.getElementById('inpT').value = it ? it.querySelector('.item-title').innerText : '';
+    document.getElementById('inpU').value = it ? it.dataset.url : '';
+    document.getElementById('inpN').value = it ? it.dataset.note : '';
+    let resetType = it ? it.dataset.resetType : '';
+    const resetTime = it ? it.dataset.resetTime : '';
+    if (resetType.startsWith('clock:')) {
+        document.getElementById('inpReset').value = 'custom';
+        document.getElementById('inpCustomTime').value = resetType.substring(6);
+        document.getElementById('inpCustomTime').style.display = 'block';
+    } else {
+        document.getElementById('inpReset').value = resetType || '';
+        document.getElementById('inpCustomTime').style.display = 'none';
+    }
+    document.getElementById('entryModal').style.display = 'flex';
+}
+
+// === sisanya sama (openCatModal, submitCat, toggleEdit, deleteItem, deleteCol, toggleCollapse, toggleNote, closeModal, initResize) ===
 function openCatModal() { document.getElementById('catModal').style.display = 'flex'; }
 function submitCat() {
     const name = document.getElementById('inpCatName').value.trim();
@@ -226,60 +318,11 @@ function toggleEdit() {
         document.querySelectorAll('.column').forEach(col => initResize(col));
     } else if (columnSortable) columnSortable.destroy();
 }
-function openEntryModal(colId, itemId = null) {
-    activeColId = colId; activeItemId = itemId;
-    const it = itemId ? document.getElementById(itemId) : null;
-    document.getElementById('inpT').value = it ? it.querySelector('.item-title').innerText : '';
-    document.getElementById('inpU').value = it ? it.dataset.url : '';
-    document.getElementById('inpN').value = it ? it.dataset.note : '';
-    document.getElementById('inpReset').value = it ? it.dataset.resetType : '';
-    document.getElementById('entryModal').style.display = 'flex';
-}
-document.getElementById('btnSaveItem').onclick = () => {
-    const t = document.getElementById('inpT').value.trim();
-    if (!t) return;
-    if (activeItemId) document.getElementById(activeItemId).remove();
-    const tempId = activeItemId || 'it-' + Date.now();
-    addItemToDOM(activeColId, t, document.getElementById('inpU').value.trim(), document.getElementById('inpN').value.trim(), document.getElementById('inpReset').value, 0, false, tempId);
-    saveData();
-    sortColumn(activeColId); // sort setelah tambah item baru
-    closeModal('entryModal');
-};
 function deleteItem(id) { if(confirm('Hapus item?')){document.getElementById(id).remove();saveData();}}
 function deleteCol(id) { if(confirm('Hapus kolom?')){document.getElementById(`col-${id}`).remove();saveData();}}
 function toggleCollapse(id) { document.getElementById(`col-${id}`).classList.toggle('collapsed'); saveData(); }
 function toggleNote(id) { const n=document.getElementById(`note-${id}`); if(n)n.classList.toggle('show'); }
 function closeModal(mId) { document.getElementById(mId).style.display = 'none'; }
-function handleSearch(e) {
-    const q = e.target.value.toLowerCase();
-    document.querySelectorAll('.item').forEach(it => {
-        const match = it.querySelector('.item-title').innerText.toLowerCase().includes(q) || it.dataset.url.toLowerCase().includes(q);
-        it.classList.toggle('hidden', !match);
-    });
-}
-function updateAllCountdowns() {
-    const now = Date.now(); let needSave = false;
-    document.querySelectorAll('.item').forEach(it => {
-        const type = it.dataset.resetType; if(!type) return;
-        const last = parseInt(it.dataset.lastCompleted)||0;
-        const status = it.querySelector('.reset-status');
-        if(last>0){
-            const dur = type==='daily'?86400000:type==='weekly'?604800000:2592000000;
-            const rem = last + dur - now;
-            if(rem<=0){
-                const chk = it.querySelector('.chk-box'); const title = it.querySelector('.item-title');
-                if(chk) chk.checked=false; if(title){title.style.textDecoration='none';title.style.opacity='1';}
-                it.dataset.lastCompleted=0; needSave=true;
-            } else if(status){
-                const h=Math.floor(rem/3600000).toString().padStart(2,'0');
-                const m=Math.floor((rem%3600000)/60000).toString().padStart(2,'0');
-                const s=Math.floor((rem%60000)/1000).toString().padStart(2,'0');
-                status.innerText=`Resets in ${h}:${m}:${s}`;
-            }
-        } else if(status) status.innerText="Ready to complete";
-    });
-    if(needSave){ if(saveDebounceTimer) clearTimeout(saveDebounceTimer); saveDebounceTimer = setTimeout(saveData,300); }
-}
 function initResize(col) {
     const handle = col.querySelector('.resize-handle');
     if(!handle) return;

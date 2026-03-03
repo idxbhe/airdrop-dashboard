@@ -25,18 +25,32 @@
 
     <div class="board" id="mainBoard"></div>
 
+    <!-- MODAL ENTRY BARU -->
     <div class="modal-overlay" id="entryModal">
         <div class="modal">
-            <h3 id="entryModalTitle">ADD NEW ENTRY</h3>
-            <input type="text" id="inpT" placeholder="Title (Enter to next)">
+            <h3>ADD NEW ENTRY</h3>
+            <input type="text" id="inpT" placeholder="Title">
             <input type="text" id="inpU" placeholder="URL (Optional)">
             <textarea id="inpN" placeholder="Notes/Description (Optional)" rows="3"></textarea>
-            <select id="inpReset">
+            
+            <label style="font-size:12px;color:var(--text-dim);margin:8px 0 4px;display:block;">Reset Type</label>
+            <select id="inpReset" onchange="handleResetTypeChange()">
                 <option value="">No Reset</option>
-                <option value="daily">Daily Reset</option>
+                <option value="checklist">✅ Checklist Only (no auto reset)</option>
+                <option value="daily">Daily Reset (24 jam)</option>
                 <option value="weekly">Weekly Reset</option>
                 <option value="monthly">Monthly Reset</option>
+                <optgroup label="Daily Clock Reset (setiap hari)">
+                    <option value="clock:00:00">Reset jam 00:00</option>
+                    <option value="clock:06:00">Reset jam 06:00</option>
+                    <option value="clock:12:00">Reset jam 12:00</option>
+                    <option value="clock:18:00">Reset jam 18:00</option>
+                    <option value="custom">Custom Clock...</option>
+                </optgroup>
             </select>
+            
+            <input type="time" id="inpCustomTime" style="display:none;margin-top:8px;" />
+
             <div class="modal-foot">
                 <button class="btn" onclick="closeModal('entryModal')">CANCEL</button>
                 <button class="btn btn-accent" id="btnSaveItem">SAVE ENTRY</button>
@@ -47,7 +61,7 @@
     <div class="modal-overlay" id="catModal">
         <div class="modal">
             <h3>CREATE CATEGORY</h3>
-            <input type="text" id="inpCatName" placeholder="Category Name (ex: Daily Task, Mainnet)">
+            <input type="text" id="inpCatName" placeholder="Category Name">
             <div class="modal-foot">
                 <button class="btn" onclick="closeModal('catModal')">CANCEL</button>
                 <button class="btn btn-accent" onclick="submitCat()">CREATE</button>
