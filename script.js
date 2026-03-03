@@ -1,4 +1,4 @@
-// ==================== AIRDROP TERMINAL v13.2 (SEARCH AUTO UNFOLD + EDIT CATEGORY) ====================
+// ==================== AIRDROP TERMINAL v14.2 (FIX CLOUDFLARE + SAVE BUG) ====================
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -10,12 +10,15 @@ let saveDebounceTimer = null;
 let isLoading = false;
 
 // =============================================
-// 1. LOAD
+// 1. LOAD + SAVE BUTTON FIX
 // =============================================
 document.addEventListener('DOMContentLoaded', () => {
     startLoadingProcess();
     setInterval(updateAllCountdowns, 1000);
     document.getElementById('searchInput').addEventListener('input', handleSearch);
+    
+    // FIX SAVE BUTTON
+    document.getElementById('btnSaveItem').addEventListener('click', saveEntry);
 });
 
 function startLoadingProcess() {
@@ -35,54 +38,105 @@ function startLoadingProcess() {
 }
 
 // =============================================
-// 2. EDIT CATEGORY TITLE (baru)
+// 2. AUTO PREFIX URL
 // =============================================
-function editColumnTitle(id) {
-    const col = document.getElementById(`col-${id}`);
-    const titleEl = col.querySelector('.col-title');
-    const newTitle = prompt('Ubah nama kategori:', titleEl.innerText.trim());
-    if (newTitle && newTitle.trim() !== '') {
-        titleEl.innerText = newTitle.trim();
-        saveData();
+function autoCompleteUrl() {
+    const urlInput = document.getElementById('inpU');
+    let val = urlInput.value.trim();
+    if (val && !val.startsWith('http') && val.includes('.')) {
+        urlInput.value = 'https://' + val;
     }
 }
 
 // =============================================
-// 3. SEARCH + AUTO UNFOLD (diperbaiki)
+// 3. FETCH TITLE MANUAL (proxy lebih kuat + fallback)
 // =============================================
-function handleSearch(e) {
-    const query = e.target.value.toLowerCase().trim();
+async function fetchTitleManual() {
+    const urlInput = document.getElementById('inpU').value.trim();
+    const titleInput = document.getElementById('inpT');
+    const btn = event.currentTarget;
 
-    document.querySelectorAll('.item').forEach(it => {
-        const title = it.querySelector('.item-title').innerText.toLowerCase();
-        const url = it.dataset.url.toLowerCase();
-        const match = title.includes(query) || url.includes(query);
-        it.classList.toggle('hidden', !match);
-    });
+    if (!urlInput.startsWith('http')) {
+        alert('Masukkan URL yang valid terlebih dahulu (contoh: x.com)');
+        return;
+    }
 
-    // AUTO UNFOLD kolom yang ada hasil pencarian
-    document.querySelectorAll('.column').forEach(col => {
-        const hasVisible = Array.from(col.querySelectorAll('.item')).some(item => 
-            !item.classList.contains('hidden')
-        );
-        if (hasVisible) {
-            col.classList.remove('collapsed');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳';
+    btn.disabled = true;
+
+    try {
+        // Proxy terbaik saat ini untuk bypass Cloudflare
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlInput)}`;
+        const res = await fetch(proxyUrl);
+        const html = await res.text();
+
+        const match = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+        if (match && match[1]) {
+            let title = match[1].trim()
+                .replace(/&amp;/g, '&')
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'");
+            titleInput.value = title;
+        } else {
+            // Fallback: ambil nama domain
+            const hostname = new URL(urlInput).hostname.replace('www.', '');
+            titleInput.value = hostname;
         }
-    });
+    } catch (err) {
+        console.error(err);
+        // Fallback kalau semua gagal
+        const hostname = new URL(urlInput).hostname.replace('www.', '');
+        titleInput.value = hostname;
+        alert('Tidak bisa mengambil title asli (Cloudflare protection).\n\nNama domain sudah diisi sebagai fallback.');
+    }
+
+    btn.innerHTML = originalText;
+    btn.disabled = false;
 }
 
 // =============================================
-// 4. HELPER RESET TIME (dari versi sebelumnya)
+// 4. SAVE ENTRY (sudah diperbaiki)
 // =============================================
+function saveEntry() {
+    const t = document.getElementById('inpT').value.trim();
+    if (!t) {
+        alert('Title tidak boleh kosong');
+        return;
+    }
+
+    if (activeItemId) document.getElementById(activeItemId).remove();
+
+    let resetType = document.getElementById('inpReset').value;
+    let resetTime = '';
+    if (resetType === 'custom') {
+        resetTime = document.getElementById('inpCustomTime').value || '00:00';
+        resetType = 'clock:' + resetTime;
+    }
+
+    const tempId = activeItemId || 'it-' + Date.now();
+    addItemToDOM(activeColId, t,
+                 document.getElementById('inpU').value.trim(),
+                 document.getElementById('inpN').value.trim(),
+                 resetType, resetTime, 0, false, tempId);
+
+    saveData();
+    sortColumn(activeColId);
+    closeModal('entryModal');
+}
+
+function handleResetTypeChange() {
+    const val = document.getElementById('inpReset').value;
+    document.getElementById('inpCustomTime').style.display = (val === 'custom') ? 'block' : 'none';
+}
+
 function getResetRemaining(item) {
     const type = item.dataset.resetType || '';
     if (!type || type === 'checklist') return Infinity;
-
     const last = parseInt(item.dataset.lastCompleted) || 0;
     const now = Date.now();
-
-    if (type.startsWith('clock:') || type === 'custom') {
-        const timeStr = type.startsWith('clock:') ? type.substring(6) : (item.dataset.resetTime || '00:00');
+    if (type.startsWith('clock:')) {
+        const timeStr = type.substring(6);
         const [h, m] = timeStr.split(':').map(Number);
         let resetToday = new Date(now);
         resetToday.setHours(h, m, 0, 0);
@@ -94,33 +148,18 @@ function getResetRemaining(item) {
     }
 }
 
-// =============================================
-// 5. AUTO SORTING
-// =============================================
 function sortColumn(colId) {
     const body = document.getElementById(`body-${colId}`);
     if (!body) return;
-
     const items = Array.from(body.children);
-    const unchecked = items.filter(it => {
-        const chk = it.querySelector('.chk-box');
-        return !chk || !chk.checked;
-    });
-    const checked = items.filter(it => {
-        const chk = it.querySelector('.chk-box');
-        return chk && chk.checked;
-    });
-
+    const unchecked = items.filter(it => !it.querySelector('.chk-box') || !it.querySelector('.chk-box').checked);
+    const checked = items.filter(it => it.querySelector('.chk-box') && it.querySelector('.chk-box').checked);
     checked.sort((a, b) => getResetRemaining(a) - getResetRemaining(b));
-
     body.innerHTML = '';
     unchecked.forEach(i => body.appendChild(i));
     checked.forEach(i => body.appendChild(i));
 }
 
-// =============================================
-// 6. CREATE COLUMN (tombol edit ditambahkan)
-// =============================================
 function createColumn(id, title, isCollapsed = false, width = 300) {
     const board = document.getElementById('mainBoard');
     const col = document.createElement('div');
@@ -148,7 +187,7 @@ function createColumn(id, title, isCollapsed = false, width = 300) {
     return col;
 }
 
-// (semua fungsi lain tetap sama seperti versi v13.1 sebelumnya — addItemToDOM, saveData, toggleCheck, updateAllCountdowns, openEntryModal, handleResetTypeChange, dll.)
+// ... (renderAllData, addItemToDOM, saveData, toggleCheck, updateAllCountdowns, openEntryModal, dll. tetap sama seperti versi sebelumnya)
 
 function renderAllData(data) {
     const board = document.getElementById('mainBoard');
@@ -232,7 +271,6 @@ function saveData() {
     db.ref('dashboard_data').set(data);
 }
 
-// === FUNGSI LAINNYA (toggleCheck, updateAllCountdowns, openEntryModal, dll.) ===
 function toggleCheck(id) {
     const it = document.getElementById(id);
     const chk = it.querySelector('.chk-box');
@@ -246,8 +284,7 @@ function toggleCheck(id) {
 }
 
 function updateAllCountdowns() {
-    const now = Date.now();
-    let needSave = false;
+    const now = Date.now(); let needSave = false;
     document.querySelectorAll('.item').forEach(it => {
         const type = it.dataset.resetType || '';
         if (!type || type === 'checklist') return;
@@ -279,11 +316,6 @@ function updateAllCountdowns() {
     }
 }
 
-function handleResetTypeChange() {
-    const val = document.getElementById('inpReset').value;
-    document.getElementById('inpCustomTime').style.display = (val === 'custom') ? 'block' : 'none';
-}
-
 function openEntryModal(colId, itemId = null) {
     activeColId = colId; activeItemId = itemId;
     const it = itemId ? document.getElementById(itemId) : null;
@@ -303,7 +335,16 @@ function openEntryModal(colId, itemId = null) {
     document.getElementById('entryModal').style.display = 'flex';
 }
 
-// === sisanya sama (openCatModal, submitCat, toggleEdit, deleteItem, deleteCol, toggleCollapse, toggleNote, closeModal, initResize) ===
+// === Fungsi pendukung ===
+function editColumnTitle(id) {
+    const col = document.getElementById(`col-${id}`);
+    const titleEl = col.querySelector('.col-title');
+    const newTitle = prompt('Ubah nama kategori:', titleEl.innerText.trim());
+    if (newTitle && newTitle.trim() !== '') {
+        titleEl.innerText = newTitle.trim();
+        saveData();
+    }
+}
 function openCatModal() { document.getElementById('catModal').style.display = 'flex'; }
 function submitCat() {
     const name = document.getElementById('inpCatName').value.trim();
@@ -323,6 +364,17 @@ function deleteCol(id) { if(confirm('Hapus kolom?')){document.getElementById(`co
 function toggleCollapse(id) { document.getElementById(`col-${id}`).classList.toggle('collapsed'); saveData(); }
 function toggleNote(id) { const n=document.getElementById(`note-${id}`); if(n)n.classList.toggle('show'); }
 function closeModal(mId) { document.getElementById(mId).style.display = 'none'; }
+function handleSearch(e) {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.item').forEach(it => {
+        const match = it.querySelector('.item-title').innerText.toLowerCase().includes(q) || it.dataset.url.toLowerCase().includes(q);
+        it.classList.toggle('hidden', !match);
+    });
+    document.querySelectorAll('.column').forEach(col => {
+        const hasVisible = Array.from(col.querySelectorAll('.item')).some(item => !item.classList.contains('hidden'));
+        if (hasVisible) col.classList.remove('collapsed');
+    });
+}
 function initResize(col) {
     const handle = col.querySelector('.resize-handle');
     if(!handle) return;

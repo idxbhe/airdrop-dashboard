@@ -25,22 +25,26 @@
 
     <div class="board" id="mainBoard"></div>
 
-    <!-- MODAL ENTRY BARU -->
     <div class="modal-overlay" id="entryModal">
         <div class="modal">
-            <h3>ADD NEW ENTRY</h3>
-            <input type="text" id="inpT" placeholder="Title">
-            <input type="text" id="inpU" placeholder="URL (Optional)">
+            <h3>ADD / EDIT ENTRY</h3>
+            
+            <div style="display:flex; gap:8px; align-items:center;">
+                <input type="text" id="inpT" placeholder="Title" style="flex:1;">
+                <button class="btn" onclick="fetchTitleManual()" style="padding:8px 12px; font-size:13px;">🔍 Fetch Title</button>
+            </div>
+            
+            <input type="text" id="inpU" placeholder="URL[](https://...)" oninput="autoCompleteUrl()">
             <textarea id="inpN" placeholder="Notes/Description (Optional)" rows="3"></textarea>
             
             <label style="font-size:12px;color:var(--text-dim);margin:8px 0 4px;display:block;">Reset Type</label>
             <select id="inpReset" onchange="handleResetTypeChange()">
                 <option value="">No Reset</option>
-                <option value="checklist">✅ Checklist Only (no auto reset)</option>
+                <option value="checklist">✅ Checklist Only</option>
                 <option value="daily">Daily Reset (24 jam)</option>
                 <option value="weekly">Weekly Reset</option>
                 <option value="monthly">Monthly Reset</option>
-                <optgroup label="Daily Clock Reset (setiap hari)">
+                <optgroup label="Daily Clock Reset">
                     <option value="clock:00:00">Reset jam 00:00</option>
                     <option value="clock:06:00">Reset jam 06:00</option>
                     <option value="clock:12:00">Reset jam 12:00</option>
@@ -48,7 +52,6 @@
                     <option value="custom">Custom Clock...</option>
                 </optgroup>
             </select>
-            
             <input type="time" id="inpCustomTime" style="display:none;margin-top:8px;" />
 
             <div class="modal-foot">
