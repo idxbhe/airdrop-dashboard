@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIRDROP_TERMINAL v16.2</title>
+    <title>AIRDROP_TERMINAL v16.5</title>
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/906/906334.png">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
@@ -15,7 +15,7 @@
 <body>
 
     <header class="top-bar">
-        <div class="logo">AIRDROP_TERMINAL <span style="font-size: 10px; opacity: 0.5;">v16.2</span></div>
+        <div class="logo">AIRDROP_TERMINAL <span style="font-size: 10px; opacity: 0.5;">v16.5</span></div>
         <div class="top-actions">
             <input type="text" class="search-input" id="searchInput" placeholder="Search tasks...">
             <button class="btn btn-accent" onclick="openCatModal()">📂 NEW CATEGORY</button>
@@ -24,7 +24,10 @@
 
     <div class="app-layout">
         <aside class="sidebar">
-            <div class="sidebar-header">KATEGORI</div>
+            <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>KATEGORI</span>
+                <span onclick="toggleCategoryEditMode()" style="cursor: pointer; font-size: 14px; opacity: 0.7;" title="Edit Categories">⚙️</span>
+            </div>
             <ul id="categoryList" class="category-list"></ul>
         </aside>
 
@@ -35,6 +38,9 @@
             </div>
             <div class="entries-list" id="entriesList"></div>
         </main>
+
+        <!-- RESIZER (geser lebar panel detail) -->
+        <div class="resizer"></div>
 
         <section class="detail-panel">
             <div class="detail-header">
@@ -50,22 +56,19 @@
         </section>
     </div>
 
+    <!-- MODAL ENTRY (lebih lebar, nyaman untuk catatan) -->
     <div class="modal-overlay" id="entryModal">
-        <div class="modal">
+        <div class="modal" style="width:520px;">
             <h3>MANAGE ENTRY</h3>
-            <div class="input-group">
-                <input type="text" id="inpT" placeholder="Judul / Nama Tugas">
-                <button class="btn btn-search" onclick="fetchTitleManual()" title="Ambil judul dari URL">🔍</button>
-            </div>
             
-            <input type="text" id="inpU" placeholder="URL (https://...)" oninput="autoCompleteUrl()">
-            <textarea id="inpN" placeholder="Catatan atau instruksi tambahan..." rows="4"></textarea>
+            <input type="text" id="inpT" placeholder="Judul / Nama Tugas">
+            <input type="text" id="inpU" placeholder="URL (contoh: grok.com)">
+            <textarea id="inpN" placeholder="Catatan atau instruksi tambahan..." rows="6"></textarea>
             
             <div class="settings-grid">
                 <div>
                     <label class="label-tiny">Reset Type</label>
                     <select id="inpReset" onchange="handleResetTypeChange()">
-                        <option value="">No Reset</option>
                         <option value="checklist">✅ Checklist Only</option>
                         <option value="daily">Daily (24 Jam)</option>
                         <option value="weekly">Weekly (7 Hari)</option>
@@ -85,11 +88,12 @@
 
             <div class="modal-foot">
                 <button class="btn" onclick="closeModal('entryModal')">CANCEL</button>
-                <button class="btn btn-accent" id="btnSaveItem">SAVE CHANGES</button>
+                <button class="btn btn-accent" onclick="handleSaveEntry()">SAVE CHANGES</button>
             </div>
         </div>
     </div>
 
+    <!-- MODAL CATEGORY -->
     <div class="modal-overlay" id="catModal">
         <div class="modal">
             <h3>NEW CATEGORY</h3>
