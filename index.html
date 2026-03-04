@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <link rel="icon" type="image/png" href="https://e7.pngegg.com/pngimages/710/283/png-clipart-computer-icons-command-line-interface-cmd-exe-save-command-line-miscellaneous-angle.png">
+    <title>AIRDROP_TERMINAL v16.2</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/906/906334.png">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -15,56 +15,85 @@
 <body>
 
     <header class="top-bar">
-        <div class="logo">AIRDROP_TERMINAL</div>
-        <div style="display: flex; gap: 8px;">
-            <input type="text" class="search-input" id="searchInput" placeholder="Search entries...">
+        <div class="logo">AIRDROP_TERMINAL <span style="font-size: 10px; opacity: 0.5;">v16.2</span></div>
+        <div class="top-actions">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search tasks...">
             <button class="btn btn-accent" onclick="openCatModal()">📂 NEW CATEGORY</button>
-            <button class="btn" id="masterEditBtn" onclick="toggleEdit()">⚙️ EDIT MODE: OFF</button>
         </div>
     </header>
 
-    <div class="board" id="mainBoard"></div>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">KATEGORI</div>
+            <ul id="categoryList" class="category-list"></ul>
+        </aside>
+
+        <main class="main-panel">
+            <div class="panel-header">
+                <span id="currentCategoryName">Memuat...</span>
+                <button class="btn btn-accent" onclick="openEntryModal()" style="margin-left:auto; font-size:11px;">➕ ADD ENTRY</button>
+            </div>
+            <div class="entries-list" id="entriesList"></div>
+        </main>
+
+        <section class="detail-panel">
+            <div class="detail-header">
+                <span>DETAIL & CATATAN</span>
+                <div class="detail-controls">
+                    <button class="btn btn-small" onclick="editCurrentItem()">✏️ Edit</button>
+                    <button class="btn btn-small btn-danger" onclick="deleteCurrentItem()">🗑️</button>
+                </div>
+            </div>
+            <div id="detailContent" class="detail-content">
+                <div class="empty-state">Pilih entri untuk melihat detail</div>
+            </div>
+        </section>
+    </div>
 
     <div class="modal-overlay" id="entryModal">
         <div class="modal">
-            <h3>ADD / EDIT ENTRY</h3>
-            
-            <div style="display:flex; gap:8px; align-items:center;">
-                <input type="text" id="inpT" placeholder="Title" style="flex:1;">
-                <button class="btn" onclick="fetchTitleManual()" style="padding:8px 12px; font-size:13px;">🔍 Fetch Title</button>
+            <h3>MANAGE ENTRY</h3>
+            <div class="input-group">
+                <input type="text" id="inpT" placeholder="Judul / Nama Tugas">
+                <button class="btn btn-search" onclick="fetchTitleManual()" title="Ambil judul dari URL">🔍</button>
             </div>
             
-            <input type="text" id="inpU" placeholder="URL[](https://...)" oninput="autoCompleteUrl()">
-            <textarea id="inpN" placeholder="Notes/Description (Optional)" rows="3"></textarea>
+            <input type="text" id="inpU" placeholder="URL (https://...)" oninput="autoCompleteUrl()">
+            <textarea id="inpN" placeholder="Catatan atau instruksi tambahan..." rows="4"></textarea>
             
-            <label style="font-size:12px;color:var(--text-dim);margin:8px 0 4px;display:block;">Reset Type</label>
-            <select id="inpReset" onchange="handleResetTypeChange()">
-                <option value="">No Reset</option>
-                <option value="checklist">✅ Checklist Only</option>
-                <option value="daily">Daily Reset (24 jam)</option>
-                <option value="weekly">Weekly Reset</option>
-                <option value="monthly">Monthly Reset</option>
-                <optgroup label="Daily Clock Reset">
-                    <option value="clock:00:00">Reset jam 00:00</option>
-                    <option value="clock:06:00">Reset jam 06:00</option>
-                    <option value="clock:12:00">Reset jam 12:00</option>
-                    <option value="clock:18:00">Reset jam 18:00</option>
-                    <option value="custom">Custom Clock...</option>
-                </optgroup>
-            </select>
-            <input type="time" id="inpCustomTime" style="display:none;margin-top:8px;" />
+            <div class="settings-grid">
+                <div>
+                    <label class="label-tiny">Reset Type</label>
+                    <select id="inpReset" onchange="handleResetTypeChange()">
+                        <option value="">No Reset</option>
+                        <option value="checklist">✅ Checklist Only</option>
+                        <option value="daily">Daily (24 Jam)</option>
+                        <option value="weekly">Weekly (7 Hari)</option>
+                        <option value="monthly">Monthly (Kalender)</option>
+                        <optgroup label="Daily Clock Reset">
+                            <option value="clock:00:00">Reset 00:00</option>
+                            <option value="clock:07:00">Reset 07:00 (WIB)</option>
+                            <option value="custom">Custom Time...</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div id="customTimeWrapper" style="display:none;">
+                    <label class="label-tiny">Set Time</label>
+                    <input type="time" id="inpCustomTime">
+                </div>
+            </div>
 
             <div class="modal-foot">
                 <button class="btn" onclick="closeModal('entryModal')">CANCEL</button>
-                <button class="btn btn-accent" id="btnSaveItem">SAVE ENTRY</button>
+                <button class="btn btn-accent" id="btnSaveItem">SAVE CHANGES</button>
             </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="catModal">
         <div class="modal">
-            <h3>CREATE CATEGORY</h3>
-            <input type="text" id="inpCatName" placeholder="Category Name">
+            <h3>NEW CATEGORY</h3>
+            <input type="text" id="inpCatName" placeholder="Nama Kategori (ex: Testnet, Nodes)">
             <div class="modal-foot">
                 <button class="btn" onclick="closeModal('catModal')">CANCEL</button>
                 <button class="btn btn-accent" onclick="submitCat()">CREATE</button>

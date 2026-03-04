@@ -1,389 +1,341 @@
-// ==================== AIRDROP TERMINAL v14.2 (FIX CLOUDFLARE + SAVE BUG) ====================
+// ==================== AIRDROP_TERMINAL v16.4 — FINAL STABLE ====================
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let isEditMode = false;
-let activeColId = null;
-let activeItemId = null;
-let columnSortable = null;
-let saveDebounceTimer = null;
-let isLoading = false;
+let dashboardData = [];
+let currentCategoryId = null;
+let selectedItemId = null;
+let activeItemId = null; 
+let isSyncing = false; // Mencegah bentrok data dengan Firebase
 
-// =============================================
-// 1. LOAD + SAVE BUTTON FIX
-// =============================================
+let categorySortable = null;
+let entriesSortable = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     startLoadingProcess();
     setInterval(updateAllCountdowns, 1000);
     document.getElementById('searchInput').addEventListener('input', handleSearch);
-    
-    // FIX SAVE BUTTON
-    document.getElementById('btnSaveItem').addEventListener('click', saveEntry);
+    document.getElementById('btnSaveItem').addEventListener('click', handleSaveEntry);
 });
 
+// --- CORE DATA & SYNC ---
 function startLoadingProcess() {
-    isLoading = true;
-    const localDataStr = localStorage.getItem('airdrop_terminal_v7');
-    if (localDataStr) renderAllData(JSON.parse(localDataStr));
-    else renderAllData(null);
+    // 1. Load dari LocalStorage untuk UI cepat
+    const local = localStorage.getItem('airdrop_terminal_data');
+    if (local) {
+        try { 
+            dashboardData = JSON.parse(local); 
+            repairData(); 
+            renderAll(); 
+        } catch(e) {}
+    }
 
-    db.ref('dashboard_data').on('value', (snapshot) => {
-        const cloudData = snapshot.val();
-        if (cloudData) {
-            localStorage.setItem('airdrop_terminal_v7', JSON.stringify(cloudData));
-            renderAllData(cloudData);
+    // 2. Load dari Firebase HANYA SEKALI di awal
+    db.ref('dashboard_data').once('value').then((snapshot) => {
+        if (snapshot.exists()) {
+            dashboardData = snapshot.val();
+            repairData();
+            saveLocal();
+            renderAll();
         }
-        isLoading = false;
+
+        // 3. Pasang listener HANYA SETELAH load awal selesai
+        db.ref('dashboard_data').on('value', (liveSnap) => {
+            if (!isSyncing && liveSnap.exists()) {
+                const cloudData = liveSnap.val();
+                if (JSON.stringify(cloudData) !== JSON.stringify(dashboardData)) {
+                    dashboardData = cloudData;
+                    repairData();
+                    saveLocal();
+                    renderAll();
+                }
+            }
+        });
     });
 }
 
-// =============================================
-// 2. AUTO PREFIX URL
-// =============================================
-function autoCompleteUrl() {
-    const urlInput = document.getElementById('inpU');
-    let val = urlInput.value.trim();
-    if (val && !val.startsWith('http') && val.includes('.')) {
-        urlInput.value = 'https://' + val;
-    }
-}
-
-// =============================================
-// 3. FETCH TITLE MANUAL (proxy lebih kuat + fallback)
-// =============================================
-async function fetchTitleManual() {
-    const urlInput = document.getElementById('inpU').value.trim();
-    const titleInput = document.getElementById('inpT');
-    const btn = event.currentTarget;
-
-    if (!urlInput.startsWith('http')) {
-        alert('Masukkan URL yang valid terlebih dahulu (contoh: x.com)');
-        return;
-    }
-
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳';
-    btn.disabled = true;
-
-    try {
-        // Proxy terbaik saat ini untuk bypass Cloudflare
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlInput)}`;
-        const res = await fetch(proxyUrl);
-        const html = await res.text();
-
-        const match = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-        if (match && match[1]) {
-            let title = match[1].trim()
-                .replace(/&amp;/g, '&')
-                .replace(/&quot;/g, '"')
-                .replace(/&#39;/g, "'");
-            titleInput.value = title;
-        } else {
-            // Fallback: ambil nama domain
-            const hostname = new URL(urlInput).hostname.replace('www.', '');
-            titleInput.value = hostname;
-        }
-    } catch (err) {
-        console.error(err);
-        // Fallback kalau semua gagal
-        const hostname = new URL(urlInput).hostname.replace('www.', '');
-        titleInput.value = hostname;
-        alert('Tidak bisa mengambil title asli (Cloudflare protection).\n\nNama domain sudah diisi sebagai fallback.');
-    }
-
-    btn.innerHTML = originalText;
-    btn.disabled = false;
-}
-
-// =============================================
-// 4. SAVE ENTRY (sudah diperbaiki)
-// =============================================
-function saveEntry() {
-    const t = document.getElementById('inpT').value.trim();
-    if (!t) {
-        alert('Title tidak boleh kosong');
-        return;
-    }
-
-    if (activeItemId) document.getElementById(activeItemId).remove();
-
-    let resetType = document.getElementById('inpReset').value;
-    let resetTime = '';
-    if (resetType === 'custom') {
-        resetTime = document.getElementById('inpCustomTime').value || '00:00';
-        resetType = 'clock:' + resetTime;
-    }
-
-    const tempId = activeItemId || 'it-' + Date.now();
-    addItemToDOM(activeColId, t,
-                 document.getElementById('inpU').value.trim(),
-                 document.getElementById('inpN').value.trim(),
-                 resetType, resetTime, 0, false, tempId);
-
-    saveData();
-    sortColumn(activeColId);
-    closeModal('entryModal');
-}
-
-function handleResetTypeChange() {
-    const val = document.getElementById('inpReset').value;
-    document.getElementById('inpCustomTime').style.display = (val === 'custom') ? 'block' : 'none';
-}
-
-function getResetRemaining(item) {
-    const type = item.dataset.resetType || '';
-    if (!type || type === 'checklist') return Infinity;
-    const last = parseInt(item.dataset.lastCompleted) || 0;
-    const now = Date.now();
-    if (type.startsWith('clock:')) {
-        const timeStr = type.substring(6);
-        const [h, m] = timeStr.split(':').map(Number);
-        let resetToday = new Date(now);
-        resetToday.setHours(h, m, 0, 0);
-        const resetMs = resetToday.getTime();
-        return resetMs > now ? resetMs - now : resetMs + 86400000 - now;
-    } else {
-        const duration = type === 'daily' ? 86400000 : type === 'weekly' ? 604800000 : 2592000000;
-        return last > 0 ? (last + duration) - now : Infinity;
-    }
-}
-
-function sortColumn(colId) {
-    const body = document.getElementById(`body-${colId}`);
-    if (!body) return;
-    const items = Array.from(body.children);
-    const unchecked = items.filter(it => !it.querySelector('.chk-box') || !it.querySelector('.chk-box').checked);
-    const checked = items.filter(it => it.querySelector('.chk-box') && it.querySelector('.chk-box').checked);
-    checked.sort((a, b) => getResetRemaining(a) - getResetRemaining(b));
-    body.innerHTML = '';
-    unchecked.forEach(i => body.appendChild(i));
-    checked.forEach(i => body.appendChild(i));
-}
-
-function createColumn(id, title, isCollapsed = false, width = 300) {
-    const board = document.getElementById('mainBoard');
-    const col = document.createElement('div');
-    col.className = `column ${isCollapsed ? 'collapsed' : ''}`;
-    col.id = `col-${id}`;
-    col.style.width = `${width}px`;
-
-    col.innerHTML = `
-        <div class="col-header">
-            <span class="col-fold" onclick="toggleCollapse('${id}')">${isCollapsed ? '▶' : '▼'}</span>
-            <span class="col-title">${title}</span>
-            <div class="action-btns">
-                <button class="btn-icon" onclick="openEntryModal('${id}')">➕</button>
-                <button class="btn-icon edit-only" onclick="editColumnTitle('${id}')">✏️</button>
-                <button class="btn-icon edit-only" onclick="deleteCol('${id}')">🗑️</button>
-            </div>
-        </div>
-        <div class="column-body" id="body-${id}"></div>
-        <div class="resize-handle edit-only"></div>
-    `;
-
-    board.appendChild(col);
-    Sortable.create(document.getElementById(`body-${id}`), { group: 'airdrop', animation: 150, onEnd: saveData });
-    if (isEditMode) initResize(col);
-    return col;
-}
-
-// ... (renderAllData, addItemToDOM, saveData, toggleCheck, updateAllCountdowns, openEntryModal, dll. tetap sama seperti versi sebelumnya)
-
-function renderAllData(data) {
-    const board = document.getElementById('mainBoard');
-    board.innerHTML = '';
-    if (!data || data.length === 0) {
-        createColumn(Date.now().toString(), 'Daily Task', false, 300);
-        saveData();
-        return;
-    }
-    data.forEach(c => {
-        const col = createColumn(c.id, c.title, c.coll || false, c.width || 300);
-        if (c.items) c.items.forEach(i => addItemToDOM(c.id, i.t, i.u, i.n, i.r, i.rt, i.lc, i.c, i.id));
-        sortColumn(c.id);
+function repairData() {
+    if (!Array.isArray(dashboardData)) dashboardData = [];
+    dashboardData.forEach(cat => {
+        if (!cat.items || !Array.isArray(cat.items)) cat.items = [];
     });
-    updateAllCountdowns();
 }
 
-function addItemToDOM(colId, title, url, note, resetType, resetTime, lastCompleted, checked, id) {
-    const isUrl = url && url.startsWith('http');
-    let faviconSrc = '';
-    if (isUrl) {
-        try { faviconSrc = `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}`; } catch(e) {}
-    }
-    const hasCheckbox = resetType !== '' && resetType !== 'noreset';
-
-    const it = document.createElement('div');
-    it.className = 'item';
-    it.id = id;
-    it.dataset.url = url || '';
-    it.dataset.note = note || '';
-    it.dataset.resetType = resetType || '';
-    it.dataset.resetTime = resetTime || '';
-    it.dataset.lastCompleted = lastCompleted || 0;
-
-    const titleStyle = checked ? 'text-decoration:line-through; opacity:0.4' : '';
-
-    it.innerHTML = `
-        <div class="item-main">
-            <span class="btn-icon note-fold" onclick="toggleNote('${id}')">▶</span>
-            <div class="fav-box" style="${isUrl && faviconSrc ? '' : 'display:none'}"><img class="fav-img" src="${faviconSrc}"></div>
-            <span class="item-title" style="${titleStyle}">${title}</span>
-            <div class="action-btns">
-                ${hasCheckbox ? `<input type="checkbox" class="chk-box" ${checked?'checked':''} onchange="toggleCheck('${id}')">` : ''}
-                ${isUrl ? `<a href="${url}" target="_blank" class="btn-open-link">OPEN ↗</a>` : ''}
-                <button class="btn-icon edit-only" onclick="openEntryModal('${colId}','${id}');event.stopPropagation();">✏️</button>
-                <button class="btn-icon edit-only" onclick="deleteItem('${id}');event.stopPropagation();">❌</button>
-            </div>
-        </div>
-        ${hasCheckbox ? `<span class="reset-status"></span>` : ''}
-        <div class="note-preview" id="note-${id}">${note||''}</div>
-    `;
-    document.getElementById(`body-${colId}`).appendChild(it);
+function saveLocal() {
+    localStorage.setItem('airdrop_terminal_data', JSON.stringify(dashboardData));
 }
 
 function saveData() {
-    if (isLoading) return;
-    const data = [];
-    document.querySelectorAll('.column').forEach(c => {
-        const items = [];
-        c.querySelectorAll('.item').forEach(i => {
-            items.push({ 
-                id: i.id, 
-                t: i.querySelector('.item-title').innerText, 
-                u: i.dataset.url, 
-                n: i.dataset.note, 
-                r: i.dataset.resetType || '', 
-                rt: i.dataset.resetTime || '',
-                lc: parseInt(i.dataset.lastCompleted) || 0, 
-                c: i.querySelector('.chk-box')?.checked || false 
-            });
-        });
-        data.push({ 
-            id: c.id.replace('col-', ''), 
-            title: c.querySelector('.col-title').innerText, 
-            coll: c.classList.contains('collapsed'), 
-            width: c.offsetWidth, 
-            items 
-        });
+    isSyncing = true;
+    saveLocal();
+    db.ref('dashboard_data').set(dashboardData).then(() => {
+        // Jeda 500ms agar update lokal tidak langsung ditimpa oleh pantulan dari Firebase
+        setTimeout(() => { isSyncing = false; }, 500); 
     });
-    localStorage.setItem('airdrop_terminal_v7', JSON.stringify(data));
-    db.ref('dashboard_data').set(data);
 }
 
-function toggleCheck(id) {
-    const it = document.getElementById(id);
-    const chk = it.querySelector('.chk-box');
-    const title = it.querySelector('.item-title');
-    title.style.textDecoration = chk.checked ? 'line-through' : 'none';
-    title.style.opacity = chk.checked ? '0.4' : '1';
-    it.dataset.lastCompleted = chk.checked ? Date.now() : 0;
-    const colId = it.closest('.column').id.replace('col-', '');
+// --- RENDERING ---
+function renderAll() {
+    if (dashboardData.length === 0) {
+        dashboardData = [{ id: Date.now().toString(), title: "General", items: [] }];
+        saveData();
+    }
+    
+    // Pastikan kategori saat ini valid
+    if (!currentCategoryId || !dashboardData.find(c => c.id === currentCategoryId)) {
+        currentCategoryId = dashboardData[0].id;
+    }
+    
+    renderCategories();
+    renderEntries(currentCategoryId);
+    
+    if (selectedItemId) showDetail(selectedItemId);
+}
+
+function renderCategories() {
+    const ul = document.getElementById('categoryList');
+    ul.innerHTML = '';
+    
+    dashboardData.forEach(cat => {
+        const li = document.createElement('li');
+        li.className = `category-item ${cat.id === currentCategoryId ? 'active' : ''}`;
+        li.innerHTML = `<span>${cat.title}</span><span class="item-count">${cat.items.length}</span>`;
+        li.onclick = () => switchCategory(cat.id);
+        ul.appendChild(li);
+    });
+
+    if (categorySortable) categorySortable.destroy();
+    categorySortable = Sortable.create(ul, { 
+        animation: 180, 
+        onEnd: () => { 
+            const newOrder = Array.from(ul.children).map(li => li.querySelector('span').innerText);
+            dashboardData.sort((a,b) => newOrder.indexOf(a.title) - newOrder.indexOf(b.title));
+            saveData(); 
+        }
+    });
+}
+
+function renderEntries(catId) {
+    const cat = dashboardData.find(c => c.id === catId);
+    if (!cat) return;
+    
+    document.getElementById('currentCategoryName').textContent = cat.title;
+    const container = document.getElementById('entriesList');
+    container.innerHTML = '';
+
+    // Sort: Unchecked di atas, Checked di bawah
+    const sortedItems = [...cat.items].sort((a, b) => (a.c === b.c) ? 0 : a.c ? 1 : -1);
+
+    sortedItems.forEach(item => {
+        container.appendChild(createEntryElement(item));
+    });
+
+    if (entriesSortable) entriesSortable.destroy();
+    entriesSortable = Sortable.create(container, {
+        animation: 150,
+        handle: '.item-title',
+        onEnd: () => {
+            const newOrderIds = Array.from(container.children).map(el => el.dataset.id);
+            cat.items.sort((a, b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
+            saveData();
+        }
+    });
+}
+
+function createEntryElement(item) {
+    const div = document.createElement('div');
+    div.className = `entry-item ${item.id === selectedItemId ? 'active' : ''} ${item.c ? 'is-checked' : ''}`;
+    div.dataset.id = item.id;
+
+    let favicon = '';
+    if (item.u) {
+        try {
+            const domain = new URL(item.u.startsWith('http') ? item.u : 'https://' + item.u).hostname;
+            favicon = `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=32" class="entry-icon" onerror="this.style.display='none'">`;
+        } catch(e) {}
+    }
+
+    div.innerHTML = `
+        <div class="entry-main">
+            ${favicon}
+            <span class="item-title">${item.t || 'Untitled'}</span>
+            <div class="entry-right">
+                ${item.r && item.r !== 'checklist' ? `<span class="countdown" data-id="${item.id}">--:--:--</span>` : ''}
+                ${item.u ? `<a href="${item.u.startsWith('http') ? item.u : 'https://'+item.u}" target="_blank" class="btn-open-link btn" onclick="event.stopPropagation()">OPEN</a>` : ''}
+                <input type="checkbox" class="chk-box" ${item.c ? 'checked' : ''} onclick="toggleCheck('${item.id}', event)">
+            </div>
+        </div>
+    `;
+    
+    div.onclick = (e) => { 
+        if(!e.target.closest('.chk-box') && !e.target.closest('.btn-open-link')) {
+            showDetail(item.id); 
+        }
+    };
+    return div;
+}
+
+// --- ACTIONS ---
+function switchCategory(id) {
+    currentCategoryId = id;
+    selectedItemId = null;
+    document.getElementById('detailContent').innerHTML = `<div class="empty-state">Klik salah satu entry di tengah</div>`;
+    renderAll();
+}
+
+function showDetail(id) {
+    selectedItemId = id;
+    const item = findItem(id);
+    if (!item) return;
+
+    document.querySelectorAll('.entry-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
+    
+    document.getElementById('detailContent').innerHTML = `
+        <h2 class="detail-title">${item.t}</h2>
+        ${item.u ? `<a href="${item.u.startsWith('http') ? item.u : 'https://'+item.u}" target="_blank" class="detail-link" style="color:var(--accent);display:block;margin:10px 0;">🔗 Kunjungi Link</a>` : ''}
+        <div style="font-size:12px; margin-bottom:10px; opacity:0.7;">Reset: ${item.r || 'None'}</div>
+        <div class="detail-note" style="white-space:pre-wrap; background:#0e0e11; padding:12px; border-radius:4px; border-left:3px solid var(--accent);">${item.n || 'Tidak ada catatan.'}</div>
+    `;
+}
+
+function openEntryModal(itemId = null) {
+    activeItemId = itemId;
+    const modal = document.getElementById('entryModal');
+    
+    document.getElementById('inpT').value = '';
+    document.getElementById('inpU').value = '';
+    document.getElementById('inpN').value = '';
+    document.getElementById('inpReset').value = 'checklist';
+
+    if (itemId) {
+        const item = findItem(itemId);
+        if (item) {
+            document.getElementById('inpT').value = item.t || '';
+            document.getElementById('inpU').value = item.u || '';
+            document.getElementById('inpN').value = item.n || '';
+            document.getElementById('inpReset').value = item.r && item.r.startsWith('clock:') ? 'custom' : (item.r || 'checklist');
+        }
+    }
+    modal.style.display = 'flex';
+}
+
+function handleSaveEntry() {
+    const title = document.getElementById('inpT').value.trim();
+    if (!title) return alert("Title required!");
+
+    const url = document.getElementById('inpU').value.trim();
+    const note = document.getElementById('inpN').value.trim();
+    let resetType = document.getElementById('inpReset').value;
+    
+    if (resetType === 'custom') {
+        const time = document.getElementById('inpCustomTime').value;
+        resetType = time ? 'clock:' + time : 'daily';
+    }
+
+    const cat = dashboardData.find(c => c.id === currentCategoryId);
+    
+    if (activeItemId) {
+        const item = findItem(activeItemId);
+        if (item) {
+            item.t = title; item.u = url; item.n = note; item.r = resetType;
+        }
+    } else {
+        cat.items.push({ id: Date.now().toString(36), t: title, u: url, n: note, r: resetType, lc: 0, c: false });
+    }
+
     saveData();
-    sortColumn(colId);
+    closeModal('entryModal');
+    renderEntries(currentCategoryId);
+    if (activeItemId) showDetail(activeItemId);
+    activeItemId = null;
+}
+
+function toggleCheck(itemId, e) {
+    e.stopPropagation();
+    const item = findItem(itemId);
+    if (!item) return;
+    item.c = !item.c;
+    item.lc = item.c ? Date.now() : 0;
+    saveData();
+    renderEntries(currentCategoryId);
+}
+
+// --- UTILS ---
+function findItem(id) {
+    for (let cat of dashboardData) {
+        const found = cat.items.find(i => i.id === id);
+        if (found) return found;
+    }
+    return null;
+}
+
+function getResetRemaining(item) {
+    if (!item.r || item.r === 'checklist' || !item.lc) return Infinity;
+    const now = Date.now();
+    const last = parseInt(item.lc);
+
+    if (item.r.startsWith('clock:')) {
+        const [h, m] = item.r.substring(6).split(':').map(Number);
+        let resetTime = new Date();
+        resetTime.setHours(h, m, 0, 0);
+        if (resetTime <= now) resetTime.setDate(resetTime.getDate() + 1);
+        return resetTime.getTime() - now;
+    }
+
+    const durations = { daily: 86400000, weekly: 604800000, monthly: 2592000000 };
+    return (last + (durations[item.r] || 0)) - now;
 }
 
 function updateAllCountdowns() {
-    const now = Date.now(); let needSave = false;
-    document.querySelectorAll('.item').forEach(it => {
-        const type = it.dataset.resetType || '';
-        if (!type || type === 'checklist') return;
-        const statusEl = it.querySelector('.reset-status');
-        const lastComp = parseInt(it.dataset.lastCompleted) || 0;
-        if (lastComp === 0) {
-            if (statusEl) statusEl.innerText = "Ready to complete";
-        } else {
-            let remaining = getResetRemaining(it);
-            if (remaining <= 0) {
-                const chk = it.querySelector('.chk-box');
-                const title = it.querySelector('.item-title');
-                if (chk) chk.checked = false;
-                if (title) { title.style.textDecoration = 'none'; title.style.opacity = '1'; }
-                it.dataset.lastCompleted = 0;
-                needSave = true;
-                if (statusEl) statusEl.innerText = "Ready to complete";
-            } else {
-                const h = Math.floor(remaining / 3600000).toString().padStart(2, '0');
-                const m = Math.floor((remaining % 3600000) / 60000).toString().padStart(2, '0');
-                const s = Math.floor((remaining % 60000) / 1000).toString().padStart(2, '0');
-                if (statusEl) statusEl.innerText = `Resets in ${h}:${m}:${s}`;
+    let needsSave = false;
+    dashboardData.forEach(cat => {
+        cat.items.forEach(item => {
+            if (!item.c || !item.r || item.r === 'checklist') return;
+            const rem = getResetRemaining(item);
+            
+            if (rem <= 0) { 
+                item.c = false; item.lc = 0; needsSave = true; 
             }
-        }
+            
+            const el = document.querySelector(`.countdown[data-id="${item.id}"]`);
+            if (el && rem > 0) {
+                const h = Math.floor(rem/3600000).toString().padStart(2,'0');
+                const m = Math.floor((rem%3600000)/60000).toString().padStart(2,'0');
+                const s = Math.floor((rem%60000)/1000).toString().padStart(2,'0');
+                el.innerText = `${h}:${m}:${s}`;
+            }
+        });
     });
-    if (needSave) {
-        if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
-        saveDebounceTimer = setTimeout(saveData, 300);
-    }
+    if (needsSave) { saveData(); renderEntries(currentCategoryId); }
 }
 
-function openEntryModal(colId, itemId = null) {
-    activeColId = colId; activeItemId = itemId;
-    const it = itemId ? document.getElementById(itemId) : null;
-    document.getElementById('inpT').value = it ? it.querySelector('.item-title').innerText : '';
-    document.getElementById('inpU').value = it ? it.dataset.url : '';
-    document.getElementById('inpN').value = it ? it.dataset.note : '';
-    let resetType = it ? it.dataset.resetType : '';
-    const resetTime = it ? it.dataset.resetTime : '';
-    if (resetType.startsWith('clock:')) {
-        document.getElementById('inpReset').value = 'custom';
-        document.getElementById('inpCustomTime').value = resetType.substring(6);
-        document.getElementById('inpCustomTime').style.display = 'block';
-    } else {
-        document.getElementById('inpReset').value = resetType || '';
-        document.getElementById('inpCustomTime').style.display = 'none';
-    }
-    document.getElementById('entryModal').style.display = 'flex';
-}
-
-// === Fungsi pendukung ===
-function editColumnTitle(id) {
-    const col = document.getElementById(`col-${id}`);
-    const titleEl = col.querySelector('.col-title');
-    const newTitle = prompt('Ubah nama kategori:', titleEl.innerText.trim());
-    if (newTitle && newTitle.trim() !== '') {
-        titleEl.innerText = newTitle.trim();
-        saveData();
-    }
-}
-function openCatModal() { document.getElementById('catModal').style.display = 'flex'; }
-function submitCat() {
-    const name = document.getElementById('inpCatName').value.trim();
-    if (name) { createColumn(Date.now().toString(), name); saveData(); closeModal('catModal'); document.getElementById('inpCatName').value = ''; }
-}
-function toggleEdit() {
-    isEditMode = !isEditMode;
-    document.body.classList.toggle('edit-mode-on', isEditMode);
-    document.getElementById('masterEditBtn').innerText = isEditMode ? "⚙️ EDIT MODE: ON" : "⚙️ EDIT MODE: OFF";
-    if (isEditMode) {
-        columnSortable = Sortable.create(document.getElementById('mainBoard'), {group:'columns', animation:150, handle:'.col-header', onEnd:saveData});
-        document.querySelectorAll('.column').forEach(col => initResize(col));
-    } else if (columnSortable) columnSortable.destroy();
-}
-function deleteItem(id) { if(confirm('Hapus item?')){document.getElementById(id).remove();saveData();}}
-function deleteCol(id) { if(confirm('Hapus kolom?')){document.getElementById(`col-${id}`).remove();saveData();}}
-function toggleCollapse(id) { document.getElementById(`col-${id}`).classList.toggle('collapsed'); saveData(); }
-function toggleNote(id) { const n=document.getElementById(`note-${id}`); if(n)n.classList.toggle('show'); }
-function closeModal(mId) { document.getElementById(mId).style.display = 'none'; }
-function handleSearch(e) {
-    const q = e.target.value.toLowerCase().trim();
-    document.querySelectorAll('.item').forEach(it => {
-        const match = it.querySelector('.item-title').innerText.toLowerCase().includes(q) || it.dataset.url.toLowerCase().includes(q);
-        it.classList.toggle('hidden', !match);
+// --- GLOBAL EXPORTS ---
+window.editCurrentItem = () => { if (selectedItemId) openEntryModal(selectedItemId); };
+window.deleteCurrentItem = () => {
+    if (!selectedItemId || !confirm("Delete item ini?")) return;
+    dashboardData.forEach(cat => cat.items = cat.items.filter(i => i.id !== selectedItemId));
+    selectedItemId = null;
+    document.getElementById('detailContent').innerHTML = `<div class="empty-state">Klik salah satu entry di tengah</div>`;
+    saveData();
+    renderAll();
+};
+window.openEntryModal = openEntryModal;
+window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+window.openCatModal = () => document.getElementById('catModal').style.display = 'flex';
+window.submitCat = () => {
+    const n = document.getElementById('inpCatName').value.trim();
+    if (!n) return;
+    dashboardData.push({ id: Date.now().toString(), title: n, items: [] });
+    saveData();
+    window.closeModal('catModal');
+    document.getElementById('inpCatName').value = '';
+    renderAll();
+};
+window.handleSearch = (e) => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('.entry-item').forEach(el => {
+        const title = el.querySelector('.item-title').innerText.toLowerCase();
+        el.style.display = title.includes(q) ? 'flex' : 'none';
     });
-    document.querySelectorAll('.column').forEach(col => {
-        const hasVisible = Array.from(col.querySelectorAll('.item')).some(item => !item.classList.contains('hidden'));
-        if (hasVisible) col.classList.remove('collapsed');
-    });
-}
-function initResize(col) {
-    const handle = col.querySelector('.resize-handle');
-    if(!handle) return;
-    handle.onmousedown = e => {
-        e.preventDefault();
-        const startX = e.clientX, startW = col.offsetWidth;
-        const move = ev => { const nw = startW + (ev.clientX - startX); if(nw>200) col.style.width = nw + 'px'; };
-        const up = () => { document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); saveData(); };
-        document.addEventListener('mousemove',move);
-        document.addEventListener('mouseup',up);
-    };
-}
+};
