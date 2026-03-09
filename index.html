@@ -63,24 +63,7 @@
             <textarea id="inpN" placeholder="Catatan atau instruksi tambahan..." rows="6"></textarea>
             
             <div class="settings-grid">
-                <div>
-                    <label class="label-tiny">Reset Type</label>
-                    <select id="inpReset" onchange="handleResetTypeChange()">
-                        <option value="checklist">✅ Checklist Only</option>
-                        <option value="daily">Daily (24 Jam)</option>
-                        <option value="weekly">Weekly (7 Hari)</option>
-                        <option value="monthly">Monthly (Kalender)</option>
-                        <optgroup label="Daily Clock Reset">
-                            <option value="clock:00:00">Reset 00:00</option>
-                            <option value="clock:07:00">Reset 07:00 (WIB)</option>
-                            <option value="custom">Custom Time...</option>
-                        </optgroup>
-                    </select>
-                </div>
-                <div id="customTimeWrapper" style="display:none;">
-                    <label class="label-tiny">Set Time</label>
-                    <input type="time" id="inpCustomTime">
-                </div>
+                <!-- Checkbox & fields akan dibuat dynamically di JS -->
             </div>
 
             <div class="modal-foot">

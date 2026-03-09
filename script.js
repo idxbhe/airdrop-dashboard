@@ -84,12 +84,19 @@ function saveData() {
     });
 }
 
-// ==================== RESIZABLE DETAIL PANEL ====================
+// ==================== RESIZABLE DETAIL PANEL + REMEMBER SIZE ====================
 
 function initResizable() {
     const resizer = document.querySelector('.resizer');
     const detailPanel = document.querySelector('.detail-panel');
     if (!resizer || !detailPanel) return;
+
+    // Load saved width from localStorage
+    const savedWidth = localStorage.getItem('detail_panel_width');
+    if (savedWidth) {
+        detailPanel.style.width = `${savedWidth}px`;
+        detailPanel.style.flex = 'none';
+    }
 
     let isDragging = false;
     let startX, startWidth;
@@ -114,6 +121,8 @@ function initResizable() {
         if (isDragging) {
             isDragging = false;
             document.body.style.cursor = 'default';
+            // Save new width to localStorage
+            localStorage.setItem('detail_panel_width', detailPanel.offsetWidth);
         }
     });
 }
@@ -209,7 +218,7 @@ function renderEntries(catId) {
     });
 }
 
-// ==================== MULTI-SOURCE FAVICON (Google 64px + DuckDuckGo + Faviconkit) ====================
+// ==================== MULTI-SOURCE FAVICON ====================
 
 function getFaviconHtml(u) {
     if (!u) return '';
@@ -231,7 +240,7 @@ function getFaviconHtml(u) {
 
 function createEntryElement(item) {
     const div = document.createElement('div');
-    div.className = `entry-item ${item.id === selectedItemId ? 'active' : ''}`; // is-checked DIHAPUS
+    div.className = `entry-item ${item.id === selectedItemId ? 'active' : ''} ${!item.c && item.r !== 'none' ? 'pending' : ''}`;
     div.dataset.id = item.id;
     div.draggable = true;
 
@@ -273,7 +282,7 @@ function createEntryElement(item) {
                     <a href="${item.u.startsWith('http') ? item.u : 'https://' + item.u}" 
                        target="_blank" 
                        class="btn-open-link btn" 
-                       onclick="event.stopPropagation()">OPEN →</a>
+                       onclick="event.stopPropagation()">Open ↗</a>
                 ` : ''}
                 ${checkboxHtml}
             </div>
@@ -324,39 +333,97 @@ function openEntryModal(itemId = null) {
     document.getElementById('inpT').value = '';
     document.getElementById('inpU').value = '';
     document.getElementById('inpN').value = '';
-    document.getElementById('inpReset').value = 'checklist';
-    document.getElementById('inpCustomTime').value = '';
 
-    const select = document.getElementById('inpReset');
-    if (!select.querySelector('option[value="none"]')) {
-        const opt = document.createElement('option');
-        opt.value = 'none';
-        opt.textContent = 'Manual Only (No Checklist / No Reset)';
-        select.appendChild(opt);
-    }
-    if (!select.querySelector('option[value="duration"]')) {
-        const opt = document.createElement('option');
-        opt.value = 'duration';
-        opt.textContent = 'Custom Duration (7 jam 6 menit 3 detik)';
-        select.appendChild(opt);
-    }
+    const grid = document.querySelector('.settings-grid');
+    grid.innerHTML = ''; // Reset grid
 
-    if (!document.getElementById('durationWrapper')) {
-        const grid = document.querySelector('.settings-grid');
-        const durDiv = document.createElement('div');
-        durDiv.id = 'durationWrapper';
-        durDiv.style.display = 'none';
-        durDiv.innerHTML = `
-            <label class="label-tiny">Durasi Reset Custom</label>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
-                <input type="number" id="durH" min="0" placeholder="Jam" style="width:100%;">
-                <input type="number" id="durM" min="0" max="59" placeholder="Menit" style="width:100%;">
-                <input type="number" id="durS" min="0" max="59" placeholder="Detik" style="width:100%;">
-            </div>
-        `;
-        grid.appendChild(durDiv);
-    }
+    const chkChecklistDiv = document.createElement('div');
+    chkChecklistDiv.innerHTML = `
+        <label class="label-tiny">Enable Checklist</label>
+        <input type="checkbox" id="enableChecklist" checked>
+    `;
+    grid.appendChild(chkChecklistDiv);
 
+    const chkResetDiv = document.createElement('div');
+    chkResetDiv.innerHTML = `
+        <label class="label-tiny">Enable Reset</label>
+        <input type="checkbox" id="enableReset">
+    `;
+    grid.appendChild(chkResetDiv);
+
+    const resetTypeDiv = document.createElement('div');
+    resetTypeDiv.id = 'resetTypeWrapper';
+    resetTypeDiv.style.display = 'none';
+    resetTypeDiv.innerHTML = `
+        <label class="label-tiny">Reset Type</label>
+        <select id="inpResetType" onchange="handleResetTypeChange()">
+            <option value="daily">Daily (24 Jam)</option>
+            <option value="weekly">Weekly (7 Days)</option>
+            <option value="clock:07:00">Every 07.00 AM</option>
+            <option value="monday:07:00">Every Monday (at 07.00 AM)</option>
+            <option value="duration">Custom by Time</option>
+            <option value="clock">Custom by Clock</option>
+            <option value="day">Custom by Day</option>
+        </select>
+    `;
+    grid.appendChild(resetTypeDiv);
+
+    const durWrapper = document.createElement('div');
+    durWrapper.id = 'durationWrapper';
+    durWrapper.style.display = 'none';
+    durWrapper.innerHTML = `
+        <label class="label-tiny">Custom Duration</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+            <input type="number" id="durH" min="0" placeholder="Jam">
+            <input type="number" id="durM" min="0" max="59" placeholder="Menit">
+            <input type="number" id="durS" min="0" max="59" placeholder="Detik">
+        </div>
+    `;
+    grid.appendChild(durWrapper);
+
+    const clockWrapper = document.createElement('div');
+    clockWrapper.id = 'clockWrapper';
+    clockWrapper.style.display = 'none';
+    clockWrapper.innerHTML = `
+        <label class="label-tiny">Custom Clock</label>
+        <input type="time" id="inpCustomClock">
+    `;
+    grid.appendChild(clockWrapper);
+
+    const dayWrapper = document.createElement('div');
+    dayWrapper.id = 'dayWrapper';
+    dayWrapper.style.display = 'none';
+    dayWrapper.innerHTML = `
+        <label class="label-tiny">Custom Day & Time</label>
+        <select id="inpCustomDay">
+            <option value="monday">Monday</option>
+            <option value="tuesday">Tuesday</option>
+            <option value="wednesday">Wednesday</option>
+            <option value="thursday">Thursday</option>
+            <option value="friday">Friday</option>
+            <option value="saturday">Saturday</option>
+            <option value="sunday">Sunday</option>
+        </select>
+        <input type="time" id="inpCustomDayTime">
+    `;
+    grid.appendChild(dayWrapper);
+
+    const chkReset = document.getElementById('enableReset');
+    const chkChecklist = document.getElementById('enableChecklist');
+    const resetWrapper = document.getElementById('resetTypeWrapper');
+
+    chkReset.addEventListener('change', () => {
+        if (chkReset.checked) {
+            chkChecklist.checked = true;
+            chkChecklist.disabled = true;
+        } else {
+            chkChecklist.disabled = false;
+        }
+        resetWrapper.style.display = chkReset.checked ? 'block' : 'none';
+        handleResetTypeChange();
+    });
+
+    // Initial state jika edit
     if (itemId) {
         const item = findItem(itemId);
         if (item) {
@@ -364,22 +431,34 @@ function openEntryModal(itemId = null) {
             document.getElementById('inpU').value = item.u || '';
             document.getElementById('inpN').value = item.n || '';
 
-            let resetVal = item.r || 'checklist';
-            if (resetVal.startsWith('clock:')) resetVal = 'custom';
-            else if (resetVal.startsWith('duration:')) resetVal = 'duration';
-            document.getElementById('inpReset').value = resetVal;
-        }
-    }
+            const r = item.r || 'checklist';
+            chkChecklist.checked = r !== 'none';
+            chkReset.checked = r !== 'checklist' && r !== 'none';
 
-    if (itemId) {
-        const item = findItem(itemId);
-        if (item && item.r && item.r.startsWith('duration:')) {
-            const parts = item.r.slice(9).split(':').map(n => parseInt(n) || 0);
-            document.getElementById('durH').value = parts[0] || '';
-            document.getElementById('durM').value = parts[1] || '';
-            document.getElementById('durS').value = parts[2] || '';
-        } else if (item && item.r && item.r.startsWith('clock:')) {
-            document.getElementById('inpCustomTime').value = item.r.substring(6);
+            if (chkReset.checked) {
+                chkChecklist.disabled = true;
+            }
+
+            const selectType = document.getElementById('inpResetType');
+            if (r === 'daily') selectType.value = 'daily';
+            else if (r === 'weekly') selectType.value = 'weekly';
+            else if (r === 'clock:07:00') selectType.value = 'clock:07:00';
+            else if (r.startsWith('monday:')) selectType.value = 'monday:07:00';
+            else if (r.startsWith('duration:')) {
+                selectType.value = 'duration';
+                const parts = r.slice(9).split(':').map(n => parseInt(n) || 0);
+                document.getElementById('durH').value = parts[0];
+                document.getElementById('durM').value = parts[1];
+                document.getElementById('durS').value = parts[2];
+            } else if (r.startsWith('clock:')) {
+                selectType.value = 'clock';
+                document.getElementById('inpCustomClock').value = r.substring(6);
+            } else if (r.includes(':')) { // day:time
+                selectType.value = 'day';
+                const [day, time] = r.split(':');
+                document.getElementById('inpCustomDay').value = day.toLowerCase();
+                document.getElementById('inpCustomDayTime').value = time;
+            }
         }
     }
 
@@ -397,16 +476,32 @@ function handleSaveEntry() {
     const url = document.getElementById('inpU').value.trim();
     const note = document.getElementById('inpN').value.trim();
 
-    let resetType = document.getElementById('inpReset').value;
+    const enableChecklist = document.getElementById('enableChecklist').checked;
+    const enableReset = document.getElementById('enableReset').checked;
 
-    if (resetType === 'custom') {
-        const time = document.getElementById('inpCustomTime').value;
-        resetType = time ? 'clock:' + time : 'daily';
-    } else if (resetType === 'duration') {
-        const h = parseInt(document.getElementById('durH').value) || 0;
-        const m = parseInt(document.getElementById('durM').value) || 0;
-        const s = parseInt(document.getElementById('durS').value) || 0;
-        resetType = (h || m || s) ? `duration:${h}:${m}:${s}` : 'daily';
+    let resetType = 'none';
+    if (enableChecklist) {
+        resetType = 'checklist';
+        if (enableReset) {
+            const selType = document.getElementById('inpResetType').value;
+            if (selType === 'daily') resetType = 'daily';
+            else if (selType === 'weekly') resetType = 'weekly';
+            else if (selType === 'clock:07:00') resetType = 'clock:07:00';
+            else if (selType === 'monday:07:00') resetType = 'monday:07:00';
+            else if (selType === 'duration') {
+                const h = parseInt(document.getElementById('durH').value) || 0;
+                const m = parseInt(document.getElementById('durM').value) || 0;
+                const s = parseInt(document.getElementById('durS').value) || 0;
+                resetType = (h || m || s) ? `duration:${h}:${m}:${s}` : 'daily';
+            } else if (selType === 'clock') {
+                const time = document.getElementById('inpCustomClock').value;
+                resetType = time ? `clock:${time}` : 'daily';
+            } else if (selType === 'day') {
+                const day = document.getElementById('inpCustomDay').value;
+                const time = document.getElementById('inpCustomDayTime').value;
+                resetType = time ? `${day}:${time}` : 'daily';
+            }
+        }
     }
 
     const cat = dashboardData.find(c => c.id === currentCategoryId);
@@ -439,6 +534,22 @@ function handleSaveEntry() {
     activeItemId = null;
 }
 
+function handleResetTypeChange() {
+    const enableReset = document.getElementById('enableReset')?.checked;
+    const selType = document.getElementById('inpResetType')?.value;
+
+    const durWrapper = document.getElementById('durationWrapper');
+    const clockWrapper = document.getElementById('clockWrapper');
+    const dayWrapper = document.getElementById('dayWrapper');
+    const resetWrapper = document.getElementById('resetTypeWrapper');
+
+    if (resetWrapper) resetWrapper.style.display = enableReset ? 'block' : 'none';
+
+    if (durWrapper) durWrapper.style.display = (enableReset && selType === 'duration') ? 'block' : 'none';
+    if (clockWrapper) clockWrapper.style.display = (enableReset && selType === 'clock') ? 'block' : 'none';
+    if (dayWrapper) dayWrapper.style.display = (enableReset && selType === 'day') ? 'block' : 'none';
+}
+
 // ==================== BASIC ACTIONS ====================
 
 function switchCategory(id) {
@@ -458,15 +569,6 @@ function showDetail(id) {
     const favicon = getFaviconHtml(item.u);
     const fullUrl = item.u ? (item.u.startsWith('http') ? item.u : 'https://' + item.u) : '';
 
-    let resetDisplay = item.r || 'None';
-    if (resetDisplay === 'none') resetDisplay = 'Manual Only';
-    else if (resetDisplay.startsWith('duration:')) {
-        const p = resetDisplay.slice(9).split(':');
-        resetDisplay = `Custom ${p[0]}j ${p[1]}m ${p[2]}d`;
-    } else if (resetDisplay.startsWith('clock:')) {
-        resetDisplay = `Daily at ${resetDisplay.slice(6)}`;
-    }
-
     let countdownHtml = '';
     const hasReset = item.r && item.r !== 'checklist' && item.r !== 'none';
     if (hasReset) {
@@ -484,16 +586,17 @@ function showDetail(id) {
 
     let linkHtml = '';
     if (fullUrl) {
+        const truncatedUrl = fullUrl.length > 50 ? fullUrl.substring(0, 40) + '...' + fullUrl.substring(fullUrl.length - 10) : fullUrl;
         linkHtml = `
             <div class="detail-link-box">
-                <code class="mono-url">${fullUrl}</code>
+                <code class="mono-url">${truncatedUrl}</code>
                 <button onclick="copyToClipboard('${fullUrl}')" class="copy-btn">📋</button>
+                <a href="${fullUrl}" target="_blank" class="btn-open-link detail-open-btn">Open ↗</a>
             </div>
-            <a href="${fullUrl}" target="_blank" class="detail-open-btn">OPEN LINK →</a>
         `;
     }
 
-    const noteHtml = item.n ? item.n.replace(/^\s+/gm, '').trim() : 'Tidak ada catatan.';
+    const noteHtml = item.n ? item.n.replace(/^\s+/gm, '').trim() : '';
 
     document.getElementById('detailContent').innerHTML = `
         <div class="detail-header-row">
@@ -502,10 +605,6 @@ function showDetail(id) {
         </div>
 
         ${linkHtml}
-
-        <div style="font-size:12px;margin:8px 0;opacity:0.7;">
-            Reset: ${resetDisplay}
-        </div>
 
         ${countdownHtml}
 
@@ -599,15 +698,6 @@ function deleteCurrentItem() {
     document.getElementById('detailContent').innerHTML = `<div class="empty-state">Pilih entri untuk melihat detail</div>`;
 }
 
-function handleResetTypeChange() {
-    const sel = document.getElementById('inpReset').value;
-    const timeWrapper = document.getElementById('customTimeWrapper');
-    const durWrapper = document.getElementById('durationWrapper');
-
-    if (timeWrapper) timeWrapper.style.display = (sel === 'custom') ? 'block' : 'none';
-    if (durWrapper) durWrapper.style.display = (sel === 'duration') ? 'block' : 'none';
-}
-
 // ==================== COUNTDOWN & SORT LOGIC ====================
 
 function getNextResetTimestamp(item) {
@@ -636,6 +726,19 @@ function getNextResetTimestamp(item) {
         const parts = item.r.slice(9).split(':').map(n => parseInt(n) || 0);
         const totalMs = (parts[0] * 3600000) + (parts[1] * 60000) + (parts[2] * 1000);
         return totalMs > 0 ? base + totalMs : null;
+    }
+    if (item.r.includes(':')) { // day:time
+        const [day, time] = item.r.split(':');
+        const [hh, mm] = time.split(':').map(n => parseInt(n, 10));
+        let d = new Date(base);
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const targetDay = days.indexOf(day.toLowerCase());
+        let currentDay = d.getDay();
+        let daysToAdd = (targetDay - currentDay + 7) % 7;
+        if (daysToAdd === 0) daysToAdd = 7; // next week if same day
+        d.setDate(d.getDate() + daysToAdd);
+        d.setHours(hh, mm, 0, 0);
+        return d.getTime();
     }
     return null;
 }
@@ -688,12 +791,18 @@ function updateAllCountdowns() {
             return;
         }
         let remaining = target - now;
+        const d = Math.floor(remaining / 86400000);
+        remaining %= 86400000;
         const h = Math.floor(remaining / 3600000);
         remaining %= 3600000;
         const m = Math.floor(remaining / 60000);
         remaining %= 60000;
         const s = Math.floor(remaining / 1000);
-        span.textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        if (d > 0) {
+            span.textContent = `${d.toString().padStart(1,'0')}:${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        } else {
+            span.textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        }
     });
 }
 
