@@ -1,0 +1,84 @@
+import { dashboardData } from './state.js';
+
+export function getFaviconHtml(u) {
+    if (!u) return '';
+    try {
+        const domain = new URL(u.startsWith('http') ? u : 'https://' + u).hostname;
+        return `
+            <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" 
+                 class="entry-icon" 
+                 onerror="this.src='https://icons.duckduckgo.com/ip3/${domain}.ico'; 
+                          this.onerror=function(){this.src='https://api.faviconkit.com/${domain}/64'; 
+                          this.onerror=function(){this.style.display='none';}}">
+        `;
+    } catch (e) {
+        return '';
+    }
+}
+
+export function findItem(id) {
+    for (let cat of dashboardData) {
+        const found = cat.items.find(i => i.id === id);
+        if (found) return found;
+    }
+    return null;
+}
+
+export function getNextResetTimestamp(item) {
+    if (!item || !item.r || item.r === 'checklist' || item.r === 'none') return null;
+
+    const base = item.lc > 0 ? item.lc : Date.now();
+
+    if (item.r === 'daily') return base + 24 * 60 * 60 * 1000;
+    if (item.r === 'weekly') return base + 7 * 24 * 60 * 60 * 1000;
+    if (item.r === 'monthly') {
+        let d = new Date(base);
+        d.setMonth(d.getMonth() + 1);
+        d.setDate(1);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime();
+    }
+    if (item.r.startsWith('clock:')) {
+        const [hh, mm] = item.r.slice(6).split(':').map(n => parseInt(n, 10));
+        let d = new Date(base);
+        d.setHours(hh, mm, 0, 0);
+        if (d.getTime() <= base) d.setDate(d.getDate() + 1);
+        return d.getTime();
+    }
+    if (item.r.startsWith('duration:')) {
+        const parts = item.r.slice(9).split(':').map(n => parseInt(n) || 0);
+        const totalMs = (parts[0] * 3600000) + (parts[1] * 60000) + (parts[2] * 1000);
+        return totalMs > 0 ? base + totalMs : null;
+    }
+    if (item.r.includes(':')) {
+        const [day, time] = item.r.split(':');
+        const [hh, mm] = time.split(':').map(n => parseInt(n, 10));
+        let d = new Date(base);
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const targetDay = days.indexOf(day.toLowerCase());
+        let currentDay = d.getDay();
+        let daysToAdd = (targetDay - currentDay + 7) % 7;
+        if (daysToAdd === 0) daysToAdd = 7;
+        d.setDate(d.getDate() + daysToAdd);
+        d.setHours(hh, mm, 0, 0);
+        return d.getTime();
+    }
+    return null;
+}
+
+export function getRemainingMs(item) {
+    if (!item.r || item.r === 'checklist' || item.r === 'none') {
+        return item.c ? Infinity : 0;
+    }
+    if (!item.c) return 0;
+    const target = getNextResetTimestamp(item);
+    if (!target) return Infinity;
+    const rem = target - Date.now();
+    return rem > 0 ? rem : 0;
+}
+
+export function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('✅ Link copied to clipboard!');
+    });
+}

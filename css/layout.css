@@ -1,0 +1,69 @@
+/* === KERANGKA UTAMA === */
+.app-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* === HEADER & TOP BAR === */
+.top-bar {
+    height: 50px;
+    background: var(--header);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    flex-shrink: 0;
+}
+
+.logo {
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: var(--accent);
+    text-shadow: 0 0 10px var(--accent-dim);
+}
+
+.top-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* === SIDEBAR === */
+.sidebar {
+    width: 220px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+/* === PEMBATAS KOLOM === */
+.resizer {
+    width: 4px;
+    background: var(--border);
+    cursor: col-resize;
+    transition: background 0.2s;
+}
+
+.resizer:hover {
+    background: var(--accent);
+}
+
+/* === MAIN PANEL === */
+.main-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    min-width: 300px;
+}
+
+/* === DETAIL PANEL === */
+.detail-panel {
+    width: 340px;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}

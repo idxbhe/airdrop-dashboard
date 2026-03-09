@@ -1,0 +1,50 @@
+/* === DASAR & VARIABEL === */
+:root {
+    --bg: #050505;
+    --panel: #0d0d0f;
+    --header: #121214;
+    --border: #1f1f23;
+    --accent: #00f2ff;
+    --accent-dim: rgba(0, 242, 255, 0.1);
+    --text: #e0e0e6;
+    --text-dim: #70707b;
+    --success: #00ff88;
+    --danger: #ff3344;
+    --pending: #ff9900;
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font);
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-size: 13px;
+}
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #333;
+}
