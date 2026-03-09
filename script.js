@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateAllCountdowns, 1000);
     document.getElementById('searchInput').addEventListener('input', handleSearch);
     
-    // Auto-complete URL (https://) on blur
     const urlInput = document.getElementById('inpU');
     if (urlInput) {
         urlInput.addEventListener('blur', () => {
@@ -36,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function startLoadingProcess() {
     const local = localStorage.getItem('airdrop_terminal_data');
-
     if (local) {
         try {
             dashboardData = JSON.parse(local);
@@ -69,7 +67,6 @@ function startLoadingProcess() {
 
 function repairData() {
     if (!Array.isArray(dashboardData)) dashboardData = [];
-
     dashboardData.forEach(cat => {
         if (!cat.items || !Array.isArray(cat.items)) cat.items = [];
     });
@@ -212,17 +209,18 @@ function renderEntries(catId) {
     });
 }
 
-// ==================== FAVICON MULTI-SOURCE (Google + DuckDuckGo fallback) ====================
+// ==================== MULTI-SOURCE FAVICON (Google 64px + DuckDuckGo + Faviconkit) ====================
 
 function getFaviconHtml(u) {
     if (!u) return '';
     try {
         const domain = new URL(u.startsWith('http') ? u : 'https://' + u).hostname;
         return `
-            <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=32" 
+            <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" 
                  class="entry-icon" 
                  onerror="this.src='https://icons.duckduckgo.com/ip3/${domain}.ico'; 
-                          this.onerror=this.style.display='none';">
+                          this.onerror=function(){this.src='https://api.faviconkit.com/${domain}/64'; 
+                          this.onerror=function(){this.style.display='none';}}">
         `;
     } catch (e) {
         return '';
@@ -233,7 +231,7 @@ function getFaviconHtml(u) {
 
 function createEntryElement(item) {
     const div = document.createElement('div');
-    div.className = `entry-item ${item.id === selectedItemId ? 'active' : ''} ${item.c && item.r !== 'none' ? 'is-checked' : ''}`;
+    div.className = `entry-item ${item.id === selectedItemId ? 'active' : ''}`; // is-checked DIHAPUS
     div.dataset.id = item.id;
     div.draggable = true;
 
@@ -329,7 +327,6 @@ function openEntryModal(itemId = null) {
     document.getElementById('inpReset').value = 'checklist';
     document.getElementById('inpCustomTime').value = '';
 
-    // Tambah opsi baru jika belum ada
     const select = document.getElementById('inpReset');
     if (!select.querySelector('option[value="none"]')) {
         const opt = document.createElement('option');
@@ -344,7 +341,6 @@ function openEntryModal(itemId = null) {
         select.appendChild(opt);
     }
 
-    // Duration wrapper
     if (!document.getElementById('durationWrapper')) {
         const grid = document.querySelector('.settings-grid');
         const durDiv = document.createElement('div');
@@ -375,7 +371,6 @@ function openEntryModal(itemId = null) {
         }
     }
 
-    // Isi duration saat edit
     if (itemId) {
         const item = findItem(itemId);
         if (item && item.r && item.r.startsWith('duration:')) {
@@ -531,7 +526,6 @@ function toggleCheck(itemId, e) {
     saveData();
     renderEntries(currentCategoryId);
 
-    // Update detail jika sedang terbuka
     if (selectedItemId === itemId) {
         showDetail(itemId);
     }
@@ -681,7 +675,6 @@ function updateAllCountdowns() {
         return;
     }
 
-    // Update semua countdown (entry + detail)
     document.querySelectorAll('.countdown, .countdown-detail').forEach(span => {
         const id = span.dataset.id;
         const item = findItem(id);
