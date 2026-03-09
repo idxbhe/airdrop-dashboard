@@ -38,7 +38,10 @@ export function renderCategories() {
                     <button onclick="deleteCategory('${cat.id}',event)">🗑️</button>
                 </div>
             `;
-            li.style.cursor = "default";
+            li.style.cursor = "pointer";
+            li.onclick = (e) => {
+                if (!e.target.closest('button')) window.switchCategory(cat.id);
+            };
         } else {
             li.innerHTML = `
                 <span style="font-weight:700;">${cat.title}</span>
@@ -190,6 +193,15 @@ export function showDetail(id) {
         `;
     }
 
+    let addedHtml = '';
+    const createdAt = item.createdAt || parseInt(item.id, 36);
+    if (createdAt) {
+        const diffMs = Date.now() - createdAt;
+        const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const dayText = days === 0 ? 'Hari ini' : `${days} hari yang lalu`;
+        addedHtml = `<div class="detail-meta" style="margin-top: 4px; font-style: italic; opacity: 0.7;">Ditambahkan: ${dayText}</div>`;
+    }
+
     const noteHtml = item.n ? item.n.replace(/^\s+/gm, '').trim() : '';
 
     document.getElementById('detailContent').innerHTML = `
@@ -197,11 +209,10 @@ export function showDetail(id) {
             ${favicon}
             <h2 class="detail-title">${item.t}</h2>
         </div>
+        ${addedHtml}
         ${linkHtml}
         ${countdownHtml}
-        <div class="detail-note mono-note">
-            ${noteHtml}
-        </div>
+        <div class="detail-note mono-note">${noteHtml}</div>
     `;
 }
 

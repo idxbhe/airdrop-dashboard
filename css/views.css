@@ -28,17 +28,18 @@
     border-color: #333;
 }
 
-.entry-item.active {
-    border-color: var(--accent);
-    box-shadow: 0 0 10px rgba(0, 242, 255, 0.05);
-}
-
 .entry-item.is-checked {
     opacity: 0.85;
 }
 
 .entry-item.pending {
     border: 1px solid var(--pending);
+}
+
+/* Memastikan .active menang atas .pending dengan meletakkannya di bawah */
+.entry-item.active {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.05);
 }
 
 .entry-main {

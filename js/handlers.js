@@ -268,7 +268,8 @@ export function handleSaveEntry() {
             n: note,
             r: resetType,
             lc: 0,
-            c: false
+            c: false,
+            createdAt: Date.now()
         });
     }
 
