@@ -35,12 +35,16 @@
     background: rgba(0, 242, 255, 0.15);
     color: var(--accent);
     border: none;
-    padding: 4px 8px;
+    padding: 0 10px;
     border-radius: 4px;
     font-size: 10px;
     text-decoration: none;
     font-weight: 600;
     transition: background 0.2s;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-open-link:hover, .detail-open-btn:hover {
@@ -55,6 +59,9 @@
     height: 32px;
     border-radius: 4px;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* === INPUT & FORM === */

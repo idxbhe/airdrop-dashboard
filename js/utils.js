@@ -7,9 +7,9 @@ export function getFaviconHtml(u) {
         return `
             <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" 
                  class="entry-icon" 
-                 onerror="this.src='https://icons.duckduckgo.com/ip3/${domain}.ico'; 
-                          this.onerror=function(){this.src='https://api.faviconkit.com/${domain}/64'; 
-                          this.onerror=function(){this.style.display='none';}}">
+                 data-domain="${domain}"
+                 data-step="1"
+                 onerror="if(window.handleFaviconError) window.handleFaviconError(this)">
         `;
     } catch (e) {
         return '';
@@ -51,17 +51,25 @@ export function getNextResetTimestamp(item) {
         return totalMs > 0 ? base + totalMs : null;
     }
     if (item.r.includes(':')) {
-        const [day, time] = item.r.split(':');
-        const [hh, mm] = time.split(':').map(n => parseInt(n, 10));
-        let d = new Date(base);
-        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        const targetDay = days.indexOf(day.toLowerCase());
-        let currentDay = d.getDay();
-        let daysToAdd = (targetDay - currentDay + 7) % 7;
-        if (daysToAdd === 0) daysToAdd = 7;
-        d.setDate(d.getDate() + daysToAdd);
-        d.setHours(hh, mm, 0, 0);
-        return d.getTime();
+        const parts = item.r.split(':');
+        if (parts.length >= 3) {
+            const day = parts[0].toLowerCase();
+            const hh = parseInt(parts[1], 10);
+            const mm = parseInt(parts[2], 10);
+            
+            let d = new Date(base);
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const targetDay = days.indexOf(day);
+            
+            if (targetDay !== -1) {
+                let currentDay = d.getDay();
+                let daysToAdd = (targetDay - currentDay + 7) % 7;
+                if (daysToAdd === 0) daysToAdd = 7;
+                d.setDate(d.getDate() + daysToAdd);
+                d.setHours(hh, mm, 0, 0);
+                return d.getTime();
+            }
+        }
     }
     return null;
 }

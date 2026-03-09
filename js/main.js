@@ -47,3 +47,25 @@ window.submitCat = submitCat;
 window.handleSearch = handleSearch;
 window.closeModal = closeModal;
 window.copyToClipboard = copyToClipboard;
+
+// Global handler untuk fallback favicon bertingkat
+window.handleFaviconError = function(img) {
+    const domain = img.getAttribute('data-domain');
+    let step = parseInt(img.getAttribute('data-step') || '1', 10);
+    step++;
+    img.setAttribute('data-step', step.toString());
+
+    if (step === 2) {
+        img.src = `https://icons.duckduckgo.com/ip3/${domain}.ico`;
+    } else if (step === 3) {
+        img.src = `https://api.faviconkit.com/${domain}/64`;
+    } else if (step === 4) {
+        img.src = `https://icon.horse/icon/${domain}`;
+    } else if (step === 5) {
+        img.src = `https://logo.clearbit.com/${domain}`;
+    } else if (step === 6) {
+        img.src = `https://cdn-icons-png.flaticon.com/512/3272/3272605.png`;
+    } else {
+        img.style.display = 'none'; // Sembunyikan jika semua source gagal
+    }
+};

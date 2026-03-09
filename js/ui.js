@@ -55,7 +55,11 @@ export function renderCategories() {
 
     initCategoryDropTargets();
 
-    if (categorySortable) categorySortable.destroy();
+    // Perbaikan Bug Edit Kategori: cegah error saat object sudah destroy
+    if (categorySortable) {
+        try { categorySortable.destroy(); } catch(e) {}
+        setCategorySortable(null);
+    }
 
     if (!isCategoryEditMode) {
         setCategorySortable(Sortable.create(ul, {
@@ -84,7 +88,11 @@ export function renderEntries(catId) {
         container.appendChild(createEntryElement(item));
     });
 
-    if (entriesSortable) entriesSortable.destroy();
+    // Pencegahan error yang sama pada sortable entry list
+    if (entriesSortable) {
+        try { entriesSortable.destroy(); } catch(e) {}
+        setEntriesSortable(null);
+    }
 
     setEntriesSortable(Sortable.create(container, {
         animation: 150,
