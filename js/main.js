@@ -1,3 +1,4 @@
+// js/main.js
 import { startLoadingProcess } from './state.js';
 import { initResizable, updateAllCountdowns, renderAll } from './ui.js';
 import { copyToClipboard } from './utils.js';
@@ -6,7 +7,8 @@ import {
     editCategory, deleteCategory, openEntryModal, 
     handleSaveEntry, handleResetTypeChange, editCurrentItem, 
     deleteCurrentItem, openCatModal, submitCat, 
-    handleSearch, closeModal 
+    handleSearch, closeModal, toggleMarkdownMode,
+    openNoteModal, toggleNoteEdit, saveNoteFromModal
 } from './handlers.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -47,6 +49,12 @@ window.submitCat = submitCat;
 window.handleSearch = handleSearch;
 window.closeModal = closeModal;
 window.copyToClipboard = copyToClipboard;
+
+// Global bindings fitur catatan baru
+window.toggleMarkdownMode = toggleMarkdownMode;
+window.openNoteModal = openNoteModal;
+window.toggleNoteEdit = toggleNoteEdit;
+window.saveNoteFromModal = saveNoteFromModal;
 
 // Global handler untuk fallback favicon bertingkat
 window.handleFaviconError = function(img) {

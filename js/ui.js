@@ -1,9 +1,16 @@
+// js/ui.js
 import { 
-    dashboardData, currentCategoryId, selectedItemId, isCategoryEditMode, 
+    dashboardData, currentCategoryId, selectedItemId, isCategoryEditMode, isMarkdownMode,
     categorySortable, entriesSortable, setCategorySortable, setEntriesSortable, 
     saveData, setCurrentCategoryId, setSelectedItemId 
 } from './state.js';
 import { getFaviconHtml, findItem, getRemainingMs, getNextResetTimestamp } from './utils.js';
+
+// Konfigurasi Marked.js untuk menangani bug newline dengan breaks: true
+marked.setOptions({
+    breaks: true,
+    gfm: true
+});
 
 export function renderAll() {
     if (dashboardData.length === 0) {
@@ -208,8 +215,17 @@ export function showDetail(id) {
         addedHtml = `<div class="detail-meta" style="margin-top: 4px; font-style: italic; opacity: 0.7;">Ditambahkan: ${dayText}</div>`;
     }
 
-    // Parsing catatan menggunakan marked.js untuk merender Markdown menjadi HTML
-    const noteHtml = item.n ? marked.parse(item.n) : '';
+    // Mengambil catatan dan memprosesnya sesuai state isMarkdownMode
+    let noteHtml = '';
+    if (item.n) {
+        if (isMarkdownMode) {
+            noteHtml = marked.parse(item.n);
+        } else {
+            // Jika markdown mati, render sebagai teks mentah (pre-wrap)
+            const safeText = item.n.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            noteHtml = `<div style="white-space: pre-wrap; font-family: inherit;">${safeText}</div>`;
+        }
+    }
 
     document.getElementById('detailContent').innerHTML = `
         <div class="detail-header-row">
@@ -219,6 +235,15 @@ export function showDetail(id) {
         ${addedHtml}
         ${linkHtml}
         ${countdownHtml}
+        
+        <div class="note-header-controls">
+            <span>CATATAN</span>
+            <div class="note-buttons">
+                <button class="btn btn-small" onclick="toggleMarkdownMode()">${isMarkdownMode ? 'Markdown: ON' : 'Markdown: OFF'}</button>
+                <button class="btn btn-small btn-accent" onclick="openNoteModal()">🔍 Perbesar</button>
+            </div>
+        </div>
+        
         <div class="detail-note mono-note">${noteHtml}</div>
     `;
 }

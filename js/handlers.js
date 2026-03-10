@@ -1,6 +1,7 @@
+// js/handlers.js
 import { 
-    dashboardData, currentCategoryId, selectedItemId, activeItemId, isCategoryEditMode, 
-    setCurrentCategoryId, setSelectedItemId, setActiveItemId, setIsCategoryEditMode, saveData 
+    dashboardData, currentCategoryId, selectedItemId, activeItemId, isCategoryEditMode, isMarkdownMode,
+    setCurrentCategoryId, setSelectedItemId, setActiveItemId, setIsCategoryEditMode, setIsMarkdownMode, saveData 
 } from './state.js';
 import { findItem } from './utils.js';
 import { renderAll, renderCategories, renderEntries, showDetail } from './ui.js';
@@ -344,4 +345,82 @@ export function handleSearch(e) {
 
 export function closeModal(id) {
     document.getElementById(id).style.display = 'none';
+}
+
+// === HANDLERS BARU UNTUK FITUR CATATAN ===
+
+export function toggleMarkdownMode() {
+    setIsMarkdownMode(!isMarkdownMode);
+    if (selectedItemId) {
+        showDetail(selectedItemId);
+    }
+}
+
+export function openNoteModal() {
+    if (!selectedItemId) return;
+    const item = findItem(selectedItemId);
+    if (!item) return;
+
+    const modal = document.getElementById('noteModal');
+    const viewArea = document.getElementById('noteViewArea');
+    const editArea = document.getElementById('noteEditArea');
+    const controls = document.getElementById('noteEditControls');
+    const toggleBtn = document.getElementById('btnToggleNoteEdit');
+
+    editArea.value = item.n || '';
+
+    if (item.n) {
+        if (isMarkdownMode) {
+            viewArea.innerHTML = marked.parse(item.n);
+        } else {
+            const safeText = item.n.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            viewArea.innerHTML = `<div style="white-space: pre-wrap; font-family: inherit;">${safeText}</div>`;
+        }
+    } else {
+        viewArea.innerHTML = '<div class="empty-state">Tidak ada catatan.</div>';
+    }
+
+    viewArea.style.display = 'block';
+    editArea.style.display = 'none';
+    controls.style.display = 'none';
+    toggleBtn.style.display = 'inline-block';
+    toggleBtn.textContent = '✏️ Mode Edit';
+
+    modal.style.display = 'flex';
+}
+
+export function toggleNoteEdit() {
+    const viewArea = document.getElementById('noteViewArea');
+    const editArea = document.getElementById('noteEditArea');
+    const controls = document.getElementById('noteEditControls');
+    const toggleBtn = document.getElementById('btnToggleNoteEdit');
+
+    const isEditing = editArea.style.display === 'block';
+
+    if (isEditing) {
+        // Cancel / Kembali ke mode view
+        viewArea.style.display = 'block';
+        editArea.style.display = 'none';
+        controls.style.display = 'none';
+        toggleBtn.style.display = 'inline-block';
+    } else {
+        // Masuk mode edit
+        viewArea.style.display = 'none';
+        editArea.style.display = 'block';
+        controls.style.display = 'flex';
+        toggleBtn.style.display = 'none';
+    }
+}
+
+export function saveNoteFromModal() {
+    if (!selectedItemId) return;
+    const item = findItem(selectedItemId);
+    if (!item) return;
+
+    const editArea = document.getElementById('noteEditArea');
+    item.n = editArea.value;
+
+    saveData();
+    showDetail(selectedItemId); // Update panel detail belakang layar
+    openNoteModal(); // Render ulang modal dan kembali ke mode view
 }

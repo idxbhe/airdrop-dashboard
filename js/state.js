@@ -1,3 +1,4 @@
+// js/state.js
 import { firebaseConfig } from './config.js';
 
 // Inisialisasi Firebase menggunakan library CDN global yang ada di index.html
@@ -10,6 +11,7 @@ export let selectedItemId = null;
 export let activeItemId = null;
 export let isSyncing = false;
 export let isCategoryEditMode = false;
+export let isMarkdownMode = true; // State baru untuk toggle markdown
 
 export let categorySortable = null;
 export let entriesSortable = null;
@@ -20,6 +22,7 @@ export function setCurrentCategoryId(id) { currentCategoryId = id; }
 export function setSelectedItemId(id) { selectedItemId = id; }
 export function setActiveItemId(id) { activeItemId = id; }
 export function setIsCategoryEditMode(status) { isCategoryEditMode = status; }
+export function setIsMarkdownMode(status) { isMarkdownMode = status; }
 export function setCategorySortable(instance) { categorySortable = instance; }
 export function setEntriesSortable(instance) { entriesSortable = instance; }
 

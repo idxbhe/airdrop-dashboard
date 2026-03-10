@@ -14,7 +14,7 @@
 	- di pop up catatan ini, kita juga bisa langsung mengeditnya, jadi tambahkan toggle edit juga.
 - di catatan akan ada tombol yang bisa menonaktifkan/mengaktifkan markdown format.
 - buat modal add entry/edit entry lebih lebar sedikit, dan lebih tinggi. dan buat form entry catatan lebih tinggi.
-- ada bug markdown, dimana saat ada karakter ➖ di awal, enter/whitespase/`\n` tidak berguna (lihat gambar yang saya upload).
+- ada bug markdown, dimana saat ada karakter ➖ di awal, enter/whitespase/`\n` sebelumnya tidak berguna.
 
 
 

@@ -1,3 +1,4 @@
+/* css/views.css */
 /* === LIST VIEW (PANEL TENGAH) === */
 .panel-header {
     padding: 12px 20px;
@@ -158,6 +159,7 @@
     font-size: 13px;
     min-height: 200px;
     overflow-wrap: break-word;
+    font-family: 'JetBrains Mono', monospace;
 }
 
 .detail-note h1, .detail-note h2, .detail-note h3, .detail-note h4, .detail-note h5, .detail-note h6 {
@@ -220,4 +222,24 @@
     border: 0;
     border-top: 1px solid var(--border);
     margin: 1.5em 0;
+}
+
+/* === NOTE HEADER CONTROLS === */
+.note-header-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.note-header-controls span {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-dim);
+}
+
+.note-buttons {
+    display: flex;
+    gap: 6px;
 }

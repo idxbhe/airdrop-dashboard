@@ -1,3 +1,4 @@
+/* css/components.css */
 /* === TOMBOL === */
 .btn {
     background: #1c1c1f;
@@ -14,6 +15,11 @@
 .btn:hover {
     background: #252529;
     border-color: #444;
+}
+
+.btn-small {
+    padding: 4px 8px;
+    font-size: 10px;
 }
 
 .btn-accent {
@@ -110,6 +116,20 @@
     padding: 28px;
     border-radius: 8px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+
+.modal-large {
+    width: 85% !important;
+    max-width: 1200px !important;
+    height: 85vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-body-flex {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 0;
 }
 
 .modal h3 {
