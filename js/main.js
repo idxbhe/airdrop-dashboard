@@ -1,15 +1,11 @@
 // js/main.js
 import { startLoadingProcess } from './state.js';
-import { initResizable, updateAllCountdowns, renderAll } from './ui.js';
 import { copyToClipboard } from './utils.js';
-import { 
-    switchCategory, toggleCheck, toggleCategoryEditMode, 
-    editCategory, deleteCategory, openEntryModal, 
-    handleSaveEntry, handleResetTypeChange, editCurrentItem, 
-    deleteCurrentItem, openCatModal, submitCat, 
-    handleSearch, closeModal, toggleMarkdownMode,
-    openNoteModal, toggleNoteEdit, saveNoteFromModal
-} from './handlers.js';
+import { initResizable, updateAllCountdowns, renderAll } from './ui-core.js';
+import { handleSearch, closeModal } from './handlers-global.js';
+import { switchCategory, toggleCategoryEditMode, editCategory, deleteCategory, openCatModal, submitCat } from './handlers-category.js';
+import { toggleCheck, openEntryModal, handleSaveEntry, handleResetTypeChange, editCurrentItem, deleteCurrentItem } from './handlers-entry.js';
+import { toggleMarkdownMode, openNoteModal, toggleNoteEdit, saveNoteFromModal } from './handlers-note.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     startLoadingProcess(() => {

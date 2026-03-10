@@ -1,17 +1,13 @@
-// js/handlers.js
+// js/handlers-entry.js
 import { 
-    dashboardData, currentCategoryId, selectedItemId, activeItemId, isCategoryEditMode, isMarkdownMode,
-    setCurrentCategoryId, setSelectedItemId, setActiveItemId, setIsCategoryEditMode, setIsMarkdownMode, saveData 
+    dashboardData, currentCategoryId, activeItemId, selectedItemId,
+    setActiveItemId, setSelectedItemId, saveData 
 } from './state.js';
 import { findItem } from './utils.js';
-import { renderAll, renderCategories, renderEntries, showDetail } from './ui.js';
-
-export function switchCategory(id) {
-    setCurrentCategoryId(id);
-    setSelectedItemId(null);
-    document.getElementById('detailContent').innerHTML = `<div class="empty-state">Klik salah satu entry di tengah</div>`;
-    renderAll();
-}
+import { renderAll } from './ui-core.js';
+import { renderEntries } from './ui-entry.js';
+import { showDetail } from './ui-detail.js';
+import { closeModal } from './handlers-global.js';
 
 export function toggleCheck(itemId, e) {
     e.stopPropagation();
@@ -27,50 +23,6 @@ export function toggleCheck(itemId, e) {
     if (selectedItemId === itemId) {
         showDetail(itemId);
     }
-}
-
-export function toggleCategoryEditMode() {
-    setIsCategoryEditMode(!isCategoryEditMode);
-    renderCategories();
-}
-
-export function editCategory(id, e) {
-    if (e) e.stopImmediatePropagation();
-    const cat = dashboardData.find(c => c.id === id);
-    if (!cat) return;
-    const newTitle = prompt('Rename kategori:', cat.title);
-    if (newTitle !== null && newTitle.trim() !== '') {
-        cat.title = newTitle.trim();
-        saveData();
-        renderAll();
-    }
-}
-
-export function deleteCategory(id, e) {
-    if (e) e.stopImmediatePropagation();
-    const isLast = dashboardData.length === 1;
-    if (!confirm(isLast ? 'Ini kategori terakhir. Hapus dan buat "General" baru?' : 'Hapus kategori ini beserta semua entry-nya?')) return;
-
-    if (isLast) {
-        dashboardData.length = 0;
-        dashboardData.push({ id: Date.now().toString(), title: "General", items: [] });
-        setCurrentCategoryId(dashboardData[0].id);
-    } else {
-        const index = dashboardData.findIndex(c => c.id === id);
-        if (index > -1) dashboardData.splice(index, 1);
-        
-        if (currentCategoryId === id && dashboardData.length > 0) {
-            setCurrentCategoryId(dashboardData[0].id);
-        }
-    }
-
-    if (selectedItemId && !findItem(selectedItemId)) {
-        setSelectedItemId(null);
-        document.getElementById('detailContent').innerHTML = `<div class="empty-state">Pilih entri untuk melihat detail</div>`;
-    }
-
-    saveData();
-    renderAll();
 }
 
 export function openEntryModal(itemId = null) {
@@ -319,118 +271,4 @@ export function deleteCurrentItem() {
     saveData();
     renderAll();
     document.getElementById('detailContent').innerHTML = `<div class="empty-state">Pilih entri untuk melihat detail</div>`;
-}
-
-export function openCatModal() {
-    document.getElementById('catModal').style.display = 'flex';
-}
-
-export function submitCat() {
-    const n = document.getElementById('inpCatName').value.trim();
-    if (!n) return;
-    dashboardData.push({ id: Date.now().toString(), title: n, items: [] });
-    saveData();
-    closeModal('catModal');
-    document.getElementById('inpCatName').value = '';
-    renderAll();
-}
-
-export function handleSearch(e) {
-    const q = e.target.value.toLowerCase();
-    document.querySelectorAll('.entry-item').forEach(el => {
-        const title = el.querySelector('.item-title').innerText.toLowerCase();
-        el.style.display = title.includes(q) ? 'flex' : 'none';
-    });
-}
-
-export function closeModal(id) {
-    document.getElementById(id).style.display = 'none';
-}
-
-// === HANDLERS BARU UNTUK FITUR CATATAN ===
-
-export function toggleMarkdownMode() {
-    setIsMarkdownMode(!isMarkdownMode);
-    if (selectedItemId) {
-        showDetail(selectedItemId);
-    }
-}
-
-export function openNoteModal() {
-    if (!selectedItemId) return;
-    const item = findItem(selectedItemId);
-    if (!item) return;
-
-    const modal = document.getElementById('noteModal');
-    const titleEl = document.getElementById('noteModalTitle');
-    const viewArea = document.getElementById('noteViewArea');
-    const editArea = document.getElementById('noteEditArea');
-    const controls = document.getElementById('noteEditControls');
-    const toggleBtn = document.getElementById('btnToggleNoteEdit');
-
-    // Update title dengan nama tugas
-    if (titleEl) {
-        titleEl.textContent = `CATATAN [${item.t}]`;
-    }
-
-    editArea.value = item.n || '';
-
-    // Terapkan class font sesuai mode ke area view modal
-    viewArea.classList.remove('mono-font', 'md-font');
-    viewArea.classList.add(isMarkdownMode ? 'md-font' : 'mono-font');
-
-    if (item.n) {
-        if (isMarkdownMode) {
-            viewArea.innerHTML = marked.parse(item.n);
-        } else {
-            const safeText = item.n.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            viewArea.innerHTML = `<div style="white-space: pre-wrap; font-family: inherit;">${safeText}</div>`;
-        }
-    } else {
-        viewArea.innerHTML = '<div class="empty-state">Tidak ada catatan.</div>';
-    }
-
-    viewArea.style.display = 'block';
-    editArea.style.display = 'none';
-    controls.style.display = 'none';
-    toggleBtn.style.display = 'inline-block';
-    toggleBtn.textContent = '✏️ Mode Edit';
-
-    modal.style.display = 'flex';
-}
-
-export function toggleNoteEdit() {
-    const viewArea = document.getElementById('noteViewArea');
-    const editArea = document.getElementById('noteEditArea');
-    const controls = document.getElementById('noteEditControls');
-    const toggleBtn = document.getElementById('btnToggleNoteEdit');
-
-    const isEditing = editArea.style.display === 'block';
-
-    if (isEditing) {
-        // Cancel / Kembali ke mode view
-        viewArea.style.display = 'block';
-        editArea.style.display = 'none';
-        controls.style.display = 'none';
-        toggleBtn.style.display = 'inline-block';
-    } else {
-        // Masuk mode edit
-        viewArea.style.display = 'none';
-        editArea.style.display = 'block';
-        controls.style.display = 'flex';
-        toggleBtn.style.display = 'none';
-    }
-}
-
-export function saveNoteFromModal() {
-    if (!selectedItemId) return;
-    const item = findItem(selectedItemId);
-    if (!item) return;
-
-    const editArea = document.getElementById('noteEditArea');
-    item.n = editArea.value;
-
-    saveData();
-    showDetail(selectedItemId); // Update panel detail belakang layar
-    openNoteModal(); // Render ulang modal dan kembali ke mode view
 }
