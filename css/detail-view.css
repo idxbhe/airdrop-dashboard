@@ -1,0 +1,75 @@
+/* css/detail-view.css */
+.detail-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    color: var(--text-dim);
+}
+
+.detail-header-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.detail-header-row img.entry-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+}
+
+.detail-content {
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.detail-title {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: var(--accent);
+}
+
+.detail-link {
+    display: inline-block;
+    color: var(--accent);
+    text-decoration: none;
+    margin-bottom: 15px;
+    font-size: 12px;
+    border-bottom: 1px solid transparent;
+}
+
+.detail-link:hover {
+    border-bottom-color: var(--accent);
+}
+
+.detail-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 15px;
+}
+
+.detail-link-box {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.mono-url {
+    font-family: 'JetBrains Mono', monospace;
+    background: #000;
+    padding: 0 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border: 1px solid var(--border);
+    height: 32px;
+    line-height: 30px;
+}

@@ -1,0 +1,71 @@
+/* css/list-view.css */
+.panel-header {
+    padding: 12px 20px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+}
+
+.entries-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+.entry-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    border-radius: 6px;
+    padding: 12px;
+    cursor: pointer;
+    transition: transform 0.1s, border 0.2s;
+}
+
+.entry-item:hover {
+    border-color: #333;
+}
+
+.entry-item.is-checked {
+    opacity: 0.85;
+}
+
+.entry-item.pending {
+    border: 1px solid var(--pending);
+}
+
+.entry-item.active {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.05);
+}
+
+.entry-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.entry-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+}
+
+.item-title {
+    flex: 1;
+    font-weight: 500;
+}
+
+.entry-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.countdown {
+    font-family: monospace;
+    color: var(--success);
+    font-size: 11px;
+}
