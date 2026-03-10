@@ -92,7 +92,7 @@
     <div class="modal-overlay" id="noteModal">
         <div class="modal modal-large">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin: 0;">CATATAN LUAS</h3>
+                <h3 id="noteModalTitle" style="margin: 0; color: var(--accent);">CATATAN</h3>
                 <div style="display: flex; gap: 8px;">
                     <button class="btn btn-accent" id="btnToggleNoteEdit" onclick="toggleNoteEdit()">✏️ Mode Edit</button>
                     <button class="btn btn-danger" onclick="closeModal('noteModal')">✖ Tutup</button>
@@ -101,7 +101,7 @@
             
             <div id="noteViewArea" class="detail-note modal-body-flex"></div>
             
-            <textarea id="noteEditArea" class="modal-body-flex" style="display: none; background: #000; color: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 15px; font-family: 'JetBrains Mono', monospace; font-size: 13px; resize: none; outline: none;" placeholder="Ketik catatan di sini..."></textarea>
+            <textarea id="noteEditArea" class="note-editor-area mono-font" style="display: none;" placeholder="Ketik catatan di sini..."></textarea>
             
             <div class="modal-foot" id="noteEditControls" style="display: none; margin-top: 15px;">
                 <button class="btn" onclick="toggleNoteEdit()">BATAL</button>

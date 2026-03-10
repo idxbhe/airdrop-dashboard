@@ -217,11 +217,14 @@ export function showDetail(id) {
 
     // Mengambil catatan dan memprosesnya sesuai state isMarkdownMode
     let noteHtml = '';
+    let fontClass = 'mono-font'; // Default font untuk view
+    
     if (item.n) {
         if (isMarkdownMode) {
             noteHtml = marked.parse(item.n);
+            fontClass = 'md-font'; // Gunakan font yang lebih baik jika markdown aktif
         } else {
-            // Jika markdown mati, render sebagai teks mentah (pre-wrap)
+            // Jika markdown mati, render sebagai teks mentah (pre-wrap) dengan font mono
             const safeText = item.n.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             noteHtml = `<div style="white-space: pre-wrap; font-family: inherit;">${safeText}</div>`;
         }
@@ -239,12 +242,18 @@ export function showDetail(id) {
         <div class="note-header-controls">
             <span>CATATAN</span>
             <div class="note-buttons">
-                <button class="btn btn-small" onclick="toggleMarkdownMode()">${isMarkdownMode ? 'Markdown: ON' : 'Markdown: OFF'}</button>
-                <button class="btn btn-small btn-accent" onclick="openNoteModal()">🔍 Perbesar</button>
+                <label class="switch-wrapper">
+                    <span class="switch-label">MARKDOWN</span>
+                    <div class="switch">
+                        <input type="checkbox" ${isMarkdownMode ? 'checked' : ''} onchange="toggleMarkdownMode()">
+                        <span class="slider"></span>
+                    </div>
+                </label>
+                <button class="btn btn-small btn-accent" onclick="openNoteModal()">OPEN NOTE ⧉</button>
             </div>
         </div>
         
-        <div class="detail-note mono-note">${noteHtml}</div>
+        <div class="detail-note ${fontClass}">${noteHtml}</div>
     `;
 }
 

@@ -362,12 +362,20 @@ export function openNoteModal() {
     if (!item) return;
 
     const modal = document.getElementById('noteModal');
+    const titleEl = document.getElementById('noteModalTitle');
     const viewArea = document.getElementById('noteViewArea');
     const editArea = document.getElementById('noteEditArea');
     const controls = document.getElementById('noteEditControls');
     const toggleBtn = document.getElementById('btnToggleNoteEdit');
 
+    // Update title dengan nama tugas
+    titleEl.textContent = `CATATAN [${item.t}]`;
+
     editArea.value = item.n || '';
+
+    // Terapkan class font sesuai mode ke area view modal
+    viewArea.classList.remove('mono-font', 'md-font');
+    viewArea.classList.add(isMarkdownMode ? 'md-font' : 'mono-font');
 
     if (item.n) {
         if (isMarkdownMode) {
