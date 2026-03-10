@@ -11,7 +11,9 @@ export let selectedItemId = null;
 export let activeItemId = null;
 export let isSyncing = false;
 export let isCategoryEditMode = false;
-export let isMarkdownMode = true; // State baru untuk toggle markdown
+
+// State markdown diambil dari localStorage agar persistent, default true jika belum ada
+export let isMarkdownMode = localStorage.getItem('airdrop_markdown_mode') !== 'false';
 
 export let categorySortable = null;
 export let entriesSortable = null;
@@ -22,7 +24,10 @@ export function setCurrentCategoryId(id) { currentCategoryId = id; }
 export function setSelectedItemId(id) { selectedItemId = id; }
 export function setActiveItemId(id) { activeItemId = id; }
 export function setIsCategoryEditMode(status) { isCategoryEditMode = status; }
-export function setIsMarkdownMode(status) { isMarkdownMode = status; }
+export function setIsMarkdownMode(status) { 
+    isMarkdownMode = status; 
+    localStorage.setItem('airdrop_markdown_mode', status); // Simpan state saat diubah
+}
 export function setCategorySortable(instance) { categorySortable = instance; }
 export function setEntriesSortable(instance) { entriesSortable = instance; }
 

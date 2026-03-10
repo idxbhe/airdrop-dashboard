@@ -369,7 +369,9 @@ export function openNoteModal() {
     const toggleBtn = document.getElementById('btnToggleNoteEdit');
 
     // Update title dengan nama tugas
-    titleEl.textContent = `CATATAN [${item.t}]`;
+    if (titleEl) {
+        titleEl.textContent = `CATATAN [${item.t}]`;
+    }
 
     editArea.value = item.n || '';
 

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIRDROP_TERMINAL v16.5</title>
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/906/906334.png">
+    <title>Airdrop Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -21,10 +21,9 @@
 <body>
 
     <header class="top-bar">
-        <div class="logo">AIRDROP_TERMINAL <span style="font-size: 10px; opacity: 0.5;">v16.5</span></div>
+        <div class="logo">Airdrop Dashboard <span style="font-size: 10px; opacity: 0.5;">v16.5</span></div>
         <div class="top-actions">
             <input type="text" class="search-input" id="searchInput" placeholder="Search tasks...">
-            <button class="btn btn-accent" onclick="openCatModal()">📂 NEW CATEGORY</button>
         </div>
     </header>
 
@@ -32,7 +31,10 @@
         <aside class="sidebar">
             <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <span>KATEGORI</span>
-                <span onclick="toggleCategoryEditMode()" style="cursor: pointer; font-size: 14px; opacity: 0.7;" title="Edit Categories">⚙️</span>
+                <div style="display: flex; gap: 6px;">
+                    <button class="icon-btn" onclick="openCatModal()" title="New Category">➕</button>
+                    <button class="icon-btn" onclick="toggleCategoryEditMode()" title="Edit Categories">⚙️</button>
+                </div>
             </div>
             <ul id="categoryList" class="category-list"></ul>
         </aside>

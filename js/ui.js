@@ -152,7 +152,7 @@ export function createEntryElement(item) {
                 ${item.u ? `
                     <a href="${item.u.startsWith('http') ? item.u : 'https://' + item.u}" 
                        target="_blank" 
-                       class="btn-open-link btn" 
+                       class="list-open-btn" 
                        onclick="event.stopPropagation()">Open ↗</a>
                 ` : ''}
                 ${checkboxHtml}
@@ -161,7 +161,7 @@ export function createEntryElement(item) {
     `;
 
     div.onclick = (e) => {
-        if (!e.target.closest('.chk-box') && !e.target.closest('.btn-open-link')) {
+        if (!e.target.closest('.chk-box') && !e.target.closest('.list-open-btn')) {
             showDetail(item.id);
         }
     };
