@@ -55,7 +55,6 @@ export function renderCategories() {
 
     initCategoryDropTargets();
 
-    // Perbaikan Bug Edit Kategori: cegah error saat object sudah destroy
     if (categorySortable) {
         try { categorySortable.destroy(); } catch(e) {}
         setCategorySortable(null);
@@ -88,7 +87,6 @@ export function renderEntries(catId) {
         container.appendChild(createEntryElement(item));
     });
 
-    // Pencegahan error yang sama pada sortable entry list
     if (entriesSortable) {
         try { entriesSortable.destroy(); } catch(e) {}
         setEntriesSortable(null);
@@ -210,7 +208,8 @@ export function showDetail(id) {
         addedHtml = `<div class="detail-meta" style="margin-top: 4px; font-style: italic; opacity: 0.7;">Ditambahkan: ${dayText}</div>`;
     }
 
-    const noteHtml = item.n ? item.n.replace(/^\s+/gm, '').trim() : '';
+    // Parsing catatan menggunakan marked.js untuk merender Markdown menjadi HTML
+    const noteHtml = item.n ? marked.parse(item.n) : '';
 
     document.getElementById('detailContent').innerHTML = `
         <div class="detail-header-row">

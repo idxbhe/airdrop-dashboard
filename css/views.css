@@ -125,19 +125,6 @@
     margin-bottom: 15px;
 }
 
-.detail-note {
-    font-family: 'JetBrains Mono', monospace;
-    background: #000;
-    padding: 14px;
-    border-radius: 6px;
-    line-height: 1.5;
-    white-space: pre-line;
-    border: 1px solid var(--border);
-    margin-top: 4px;
-    font-size: 12.5px;
-    min-height: 200px;
-}
-
 .detail-link-box {
     display: flex;
     gap: 8px;
@@ -158,4 +145,79 @@
     border: 1px solid var(--border);
     height: 32px;
     line-height: 30px;
+}
+
+/* === MARKDOWN STYLES UNTUK DETAIL NOTE === */
+.detail-note {
+    background: #000;
+    padding: 14px;
+    border-radius: 6px;
+    line-height: 1.6;
+    border: 1px solid var(--border);
+    margin-top: 4px;
+    font-size: 13px;
+    min-height: 200px;
+    overflow-wrap: break-word;
+}
+
+.detail-note h1, .detail-note h2, .detail-note h3, .detail-note h4, .detail-note h5, .detail-note h6 {
+    color: var(--accent);
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+    line-height: 1.2;
+}
+
+.detail-note h1 { font-size: 1.5em; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+.detail-note h2 { font-size: 1.3em; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+.detail-note h3 { font-size: 1.1em; }
+
+.detail-note p { margin-bottom: 1em; }
+.detail-note p:last-child { margin-bottom: 0; }
+
+.detail-note a { color: var(--accent); text-decoration: none; }
+.detail-note a:hover { text-decoration: underline; }
+
+.detail-note ul, .detail-note ol {
+    margin-bottom: 1em;
+    padding-left: 20px;
+}
+.detail-note li { margin-bottom: 4px; }
+
+.detail-note blockquote {
+    border-left: 4px solid var(--accent);
+    color: var(--text-dim);
+    margin: 0 0 1em 0;
+    background: rgba(0, 242, 255, 0.05);
+    padding: 8px 12px;
+    border-radius: 0 4px 4px 0;
+}
+
+.detail-note code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--panel);
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--pending);
+}
+
+.detail-note pre {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin-bottom: 1em;
+}
+
+.detail-note pre code {
+    background: transparent;
+    padding: 0;
+    color: var(--text);
+}
+
+.detail-note hr {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 1.5em 0;
 }
