@@ -9,7 +9,20 @@ export let isSyncing = false;
 export let isCategoryEditMode = false;
 export let isGuestMode = false;
 export let db = null;
-export let userPath = 'dashboard_data'; // Struktur awal untuk global, siap diubah ke users/${uid}
+export let auth = null; // Tambahan auth
+
+// State Auth Baru
+export let currentUser = null;
+export let isAuthReady = false;
+
+// Path & Keys
+export let userPath = 'dashboard_data'; 
+const BASE_LOCAL_KEY = 'airdrop_terminal_data';
+
+// Helper function untuk LocalStorage Key yang dinamis
+export function getLocalKey() {
+    return currentUser ? `${BASE_LOCAL_KEY}_${currentUser.uid}` : BASE_LOCAL_KEY;
+}
 
 // State markdown diambil dari localStorage agar persistent, default true jika belum ada
 export let isMarkdownMode = localStorage.getItem('airdrop_markdown_mode') !== 'false';
@@ -24,9 +37,11 @@ try {
     }
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
+    auth = firebase.auth(); // Inisialisasi Auth
 } catch (error) {
     console.warn("⚠️ Firebase gagal diinisialisasi atau config tidak ditemukan. Berjalan di Mode Guest (Offline/Lokal).", error);
     isGuestMode = true;
+    isAuthReady = true; // Guest mode langsung siap
 }
 
 // Setter functions untuk mengizinkan perubahan state dari modul lain
@@ -41,16 +56,104 @@ export function setIsMarkdownMode(status) {
 }
 export function setCategorySortable(instance) { categorySortable = instance; }
 export function setEntriesSortable(instance) { entriesSortable = instance; }
+export function setCurrentUser(user) { currentUser = user; }
+export function setIsAuthReady(status) { isAuthReady = status; }
+export function setIsGuestMode(status) { isGuestMode = status; }
+
+export function resetState() {
+    dashboardData = [];
+    currentCategoryId = null;
+    selectedItemId = null;
+    activeItemId = null;
+    isSyncing = false;
+    isCategoryEditMode = false;
+}
 
 export function repairData() {
-    if (!Array.isArray(dashboardData)) dashboardData = [];
+    if (!Array.isArray(dashboardData)) {
+        if (dashboardData && typeof dashboardData === 'object') {
+            dashboardData = Object.values(dashboardData);
+        } else {
+            dashboardData = [];
+        }
+    }
     dashboardData.forEach(cat => {
-        if (!cat.items || !Array.isArray(cat.items)) cat.items = [];
+        if (!cat.title) cat.title = "General";
+        if (!cat.items || !Array.isArray(cat.items)) {
+            if (cat.items && typeof cat.items === 'object') {
+                cat.items = Object.values(cat.items);
+            } else {
+                cat.items = [];
+            }
+        }
     });
 }
 
+export function getUserPath() {
+    return currentUser ? `users/${currentUser.uid}/dashboard_data` : 'dashboard_data';
+}
+
 export function saveLocal() {
-    localStorage.setItem('airdrop_terminal_data', JSON.stringify(dashboardData));
+    localStorage.setItem(getLocalKey(), JSON.stringify(dashboardData));
+}
+
+export function cleanupDatabaseListeners() {
+    if (db && currentUser) {
+        db.ref(getUserPath()).off();
+    }
+}
+
+export function mergeGuestData() {
+    const guestDataStr = localStorage.getItem(BASE_LOCAL_KEY);
+    if (!guestDataStr) return false;
+
+    let guestData = null;
+    try {
+        guestData = JSON.parse(guestDataStr);
+    } catch (e) {
+        localStorage.removeItem(BASE_LOCAL_KEY);
+        return false;
+    }
+
+    if (!Array.isArray(guestData) || guestData.length === 0) {
+        localStorage.removeItem(BASE_LOCAL_KEY);
+        return false;
+    }
+
+    let isMerged = false;
+
+    guestData.forEach(gCat => {
+        if (!gCat.items || gCat.items.length === 0) return;
+
+        let targetCat = dashboardData.find(c => c.title && c.title.toLowerCase() === gCat.title.toLowerCase());
+        
+        if (!targetCat) {
+            targetCat = {
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+                title: gCat.title,
+                items: []
+            };
+            dashboardData.push(targetCat);
+        }
+
+        gCat.items.forEach(gItem => {
+            // Cek agar tidak duplikasi jika Judul dan URL sudah ada di kategori ini
+            const isDuplicate = targetCat.items.some(existing => existing.t === gItem.t && existing.u === gItem.u);
+            if (!isDuplicate) {
+                const newItem = { ...gItem, id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5) };
+                targetCat.items.push(newItem);
+                isMerged = true;
+            }
+        });
+    });
+
+    localStorage.removeItem(BASE_LOCAL_KEY);
+    
+    if (isMerged) {
+        saveData(); 
+        return true;
+    }
+    return false;
 }
 
 let syncTimeout = null;
@@ -66,7 +169,7 @@ export function saveData() {
     if (syncTimeout) clearTimeout(syncTimeout);
     
     syncTimeout = setTimeout(() => {
-        db.ref(userPath).set(dashboardData).then(() => {
+        db.ref(getUserPath()).set(dashboardData).then(() => {
             setTimeout(() => { isSyncing = false; }, 500);
         }).catch((err) => {
             console.error("Gagal menyimpan ke Firebase:", err);
@@ -76,7 +179,12 @@ export function saveData() {
 }
 
 export function startLoadingProcess(onDataLoadedCallback) {
-    const local = localStorage.getItem('airdrop_terminal_data');
+    // Matikan listener lama sebelum membuat yang baru agar tidak duplikat listener
+    if (db && !isGuestMode) {
+        db.ref(getUserPath()).off();
+    }
+
+    const local = localStorage.getItem(getLocalKey());
     if (local) {
         try {
             dashboardData = JSON.parse(local);
@@ -88,19 +196,37 @@ export function startLoadingProcess(onDataLoadedCallback) {
     }
 
     if (isGuestMode || !db) {
-        // Jika guest mode, berhenti di sini karena data lokal sudah dimuat
+        // Jika guest mode, pastikan data minimal array kosong dan hilangkan loading
+        repairData();
+        if (onDataLoadedCallback) onDataLoadedCallback();
         return;
     }
 
-    db.ref(userPath).once('value').then((snapshot) => {
-        if (snapshot.exists()) {
-            dashboardData = snapshot.val();
-            repairData();
+    const path = getUserPath();
+
+    db.ref(path).once('value').then((snapshot) => {
+        try {
+            if (snapshot.exists()) {
+                dashboardData = snapshot.val();
+            } else if (!local) {
+                dashboardData = []; // Reset jika cloud kosong & tidak ada local
+            }
+
+            repairData(); // Perbaiki data dulu SEBELUM merge
+
+            // Jalankan logika Merge Data Guest jika ada
+            if (!isGuestMode) {
+                mergeGuestData();
+            }
+
             saveLocal();
+        } catch (err) {
+            console.error("Error processing cloud data:", err);
+        } finally {
             if (onDataLoadedCallback) onDataLoadedCallback();
         }
 
-        db.ref(userPath).on('value', (liveSnap) => {
+        db.ref(path).on('value', (liveSnap) => {
             if (!isSyncing && liveSnap.exists()) {
                 const cloudData = liveSnap.val();
                 if (JSON.stringify(cloudData) !== JSON.stringify(dashboardData)) {
@@ -115,5 +241,7 @@ export function startLoadingProcess(onDataLoadedCallback) {
         console.error("Gagal membaca dari Firebase:", err);
         // Fallback otomatis ke Guest Mode jika terputus/gagal read
         isGuestMode = true; 
+        repairData();
+        if (onDataLoadedCallback) onDataLoadedCallback();
     });
 }

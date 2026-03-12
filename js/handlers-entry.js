@@ -272,3 +272,43 @@ export function deleteCurrentItem() {
     renderAll();
     document.getElementById('detailContent').innerHTML = `<div class="empty-state">Pilih entri untuk melihat detail</div>`;
 }
+
+export function removeDuplicates() {
+    if (!currentCategoryId) return;
+    
+    const cat = dashboardData.find(c => c.id === currentCategoryId);
+    if (!cat || !cat.items || cat.items.length === 0) return;
+
+    const seen = new Set();
+    const uniqueItems = [];
+    let duplicateCount = 0;
+
+    for (const item of cat.items) {
+        // Gabungkan judul dan URL untuk mengecek keunikan (case-insensitive)
+        const key = `${(item.t || '').trim().toLowerCase()}|${(item.u || '').trim().toLowerCase()}`;
+        if (seen.has(key)) {
+            duplicateCount++;
+        } else {
+            seen.add(key);
+            uniqueItems.push(item);
+        }
+    }
+
+    if (duplicateCount > 0) {
+        if (confirm(`Ditemukan ${duplicateCount} duplikasi pada kategori ini. Hapus duplikasi?`)) {
+            cat.items = uniqueItems;
+            
+            // Jika selectedItem yang sedang aktif ternyata ikut terhapus karena duplikat
+            const isSelectedStillExists = cat.items.some(i => i.id === selectedItemId);
+            if (selectedItemId && !isSelectedStillExists) {
+                setSelectedItemId(null);
+                document.getElementById('detailContent').innerHTML = `<div class="empty-state">Pilih entri untuk melihat detail</div>`;
+            }
+
+            saveData();
+            renderEntries(currentCategoryId);
+        }
+    } else {
+        alert('Tidak ada duplikasi ditemukan pada kategori ini.');
+    }
+}

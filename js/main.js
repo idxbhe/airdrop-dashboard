@@ -4,13 +4,12 @@ import { copyToClipboard } from './utils.js';
 import { initResizable, updateAllCountdowns, renderAll } from './ui-core.js';
 import { handleSearch, closeModal, exportData, importData } from './handlers-global.js';
 import { switchCategory, toggleCategoryEditMode, editCategory, deleteCategory, openCatModal, submitCat } from './handlers-category.js';
-import { toggleCheck, openEntryModal, handleSaveEntry, handleResetTypeChange, editCurrentItem, deleteCurrentItem } from './handlers-entry.js';
+import { toggleCheck, openEntryModal, handleSaveEntry, handleResetTypeChange, editCurrentItem, deleteCurrentItem, removeDuplicates } from './handlers-entry.js';
 import { toggleMarkdownMode, openNoteModal, toggleNoteEdit, saveNoteFromModal } from './handlers-note.js';
+import { initAuth, loginWithGoogle, logout, toggleUserDropdown } from './auth.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    startLoadingProcess(() => {
-        renderAll();
-    });
+    initAuth();
     
     setInterval(updateAllCountdowns, 1000);
     
@@ -30,6 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Global bindings for inline HTML event handlers (onclick, onchange, dll)
+window.loginWithGoogle = loginWithGoogle;
+window.logout = logout;
+window.toggleUserDropdown = toggleUserDropdown;
 window.switchCategory = switchCategory;
 window.toggleCheck = toggleCheck;
 window.toggleCategoryEditMode = toggleCategoryEditMode;
@@ -40,6 +42,7 @@ window.handleSaveEntry = handleSaveEntry;
 window.handleResetTypeChange = handleResetTypeChange;
 window.editCurrentItem = editCurrentItem;
 window.deleteCurrentItem = deleteCurrentItem;
+window.removeDuplicates = removeDuplicates;
 window.openCatModal = openCatModal;
 window.submitCat = submitCat;
 window.handleSearch = handleSearch;

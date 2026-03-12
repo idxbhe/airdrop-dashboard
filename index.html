@@ -8,6 +8,7 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -27,6 +28,14 @@
 </head>
 <body>
 
+    <!-- Loading Screen Overlay -->
+    <div id="authLoadingScreen" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner">🚀</div>
+            <h2 style="margin:0; font-size:16px; letter-spacing:1px;">Memuat Dashboard...</h2>
+        </div>
+    </div>
+
     <header class="top-bar">
         <div class="logo">Airdrop Dashboard <span style="font-size: 10px; opacity: 0.5;">v16.5</span></div>
         <div class="top-actions" style="display: flex; gap: 8px; align-items: center;">
@@ -34,6 +43,21 @@
             <button class="btn btn-small" onclick="document.getElementById('importFile').click()" title="Import Data" style="padding: 4px 8px; font-size: 11px;">📥 IMPORT</button>
             <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importData(event)">
             <input type="text" class="search-input" id="searchInput" placeholder="Search tasks...">
+            
+            <!-- Tombol Login -->
+            <button id="btnLogin" class="btn btn-small btn-accent" onclick="window.loginWithGoogle()" style="padding: 4px 8px; font-size: 11px; display: none;">LOGIN GOOGLE</button>
+            
+            <!-- Area Profil User (Dropdown) -->
+            <div id="userProfileArea" class="user-profile-dropdown" style="display: none;">
+                <div class="user-profile-trigger" onclick="window.toggleUserDropdown()">
+                    <img id="userAvatar" src="" alt="Avatar" referrerpolicy="no-referrer">
+                    <span id="userName"></span>
+                    <span style="font-size: 10px;">▼</span>
+                </div>
+                <div id="userDropdownMenu" class="dropdown-menu">
+                    <button class="dropdown-item text-danger" onclick="window.logout()">Log Out</button>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -52,7 +76,10 @@
         <main class="main-panel">
             <div class="panel-header">
                 <span id="currentCategoryName">Memuat...</span>
-                <button class="btn btn-accent" onclick="openEntryModal()" style="margin-left:auto; font-size:11px;">➕ ADD ENTRY</button>
+                <div style="margin-left:auto; display:flex; gap:8px;">
+                    <button class="btn btn-small" onclick="removeDuplicates()" title="Hapus duplikasi pada kategori ini">🧹 REMOVE DUPLICATES</button>
+                    <button class="btn btn-accent btn-small" onclick="openEntryModal()">➕ ADD ENTRY</button>
+                </div>
             </div>
             <div class="entries-list" id="entriesList"></div>
         </main>
