@@ -2,7 +2,7 @@
 import { startLoadingProcess } from './state.js';
 import { copyToClipboard } from './utils.js';
 import { initResizable, updateAllCountdowns, renderAll } from './ui-core.js';
-import { handleSearch, closeModal } from './handlers-global.js';
+import { handleSearch, closeModal, exportData, importData } from './handlers-global.js';
 import { switchCategory, toggleCategoryEditMode, editCategory, deleteCategory, openCatModal, submitCat } from './handlers-category.js';
 import { toggleCheck, openEntryModal, handleSaveEntry, handleResetTypeChange, editCurrentItem, deleteCurrentItem } from './handlers-entry.js';
 import { toggleMarkdownMode, openNoteModal, toggleNoteEdit, saveNoteFromModal } from './handlers-note.js';
@@ -45,6 +45,8 @@ window.submitCat = submitCat;
 window.handleSearch = handleSearch;
 window.closeModal = closeModal;
 window.copyToClipboard = copyToClipboard;
+window.exportData = exportData;
+window.importData = importData;
 
 // Global bindings fitur catatan baru
 window.toggleMarkdownMode = toggleMarkdownMode;

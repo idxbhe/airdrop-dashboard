@@ -29,7 +29,10 @@
 
     <header class="top-bar">
         <div class="logo">Airdrop Dashboard <span style="font-size: 10px; opacity: 0.5;">v16.5</span></div>
-        <div class="top-actions">
+        <div class="top-actions" style="display: flex; gap: 8px; align-items: center;">
+            <button class="btn btn-small" onclick="exportData()" title="Export Data" style="padding: 4px 8px; font-size: 11px;">📤 EXPORT</button>
+            <button class="btn btn-small" onclick="document.getElementById('importFile').click()" title="Import Data" style="padding: 4px 8px; font-size: 11px;">📥 IMPORT</button>
+            <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importData(event)">
             <input type="text" class="search-input" id="searchInput" placeholder="Search tasks...">
         </div>
     </header>

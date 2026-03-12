@@ -5,7 +5,7 @@ export function getFaviconHtml(u) {
     try {
         const domain = new URL(u.startsWith('http') ? u : 'https://' + u).hostname;
         return `
-            <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" 
+            <img src="https://unavatar.io/${domain}?fallback=https://www.google.com/s2/favicons?domain=${domain}&sz=64" 
                  class="entry-icon" 
                  data-domain="${domain}"
                  data-step="1"
