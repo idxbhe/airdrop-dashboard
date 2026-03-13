@@ -1,6 +1,7 @@
 // js/auth.js
 import { auth, currentUser, setCurrentUser, setIsAuthReady, setIsGuestMode, resetState, startLoadingProcess, cleanupDatabaseListeners } from './state.js';
 import { renderAll } from './ui-core.js';
+import { customAlert, customConfirm } from './ui-dialog.js';
 
 export function initAuth() {
     if (!auth) {
@@ -45,17 +46,20 @@ function finishLoadingAndRender() {
 function updateAuthUI(user) {
     const userProfileArea = document.getElementById('userProfileArea');
     const btnLogin = document.getElementById('btnLogin');
+    const btnLogout = document.getElementById('btnLogout');
     const userAvatar = document.getElementById('userAvatar');
     const userName = document.getElementById('userName');
 
     if (user) {
-        userProfileArea.style.display = 'flex';
-        btnLogin.style.display = 'none';
         userAvatar.src = user.photoURL || 'https://via.placeholder.com/24';
         userName.textContent = user.displayName || user.email || 'User';
+        if (btnLogin) btnLogin.style.display = 'none';
+        if (btnLogout) btnLogout.style.display = 'block';
     } else {
-        userProfileArea.style.display = 'none';
-        btnLogin.style.display = 'block';
+        userAvatar.src = 'https://ui-avatars.com/api/?name=Guest&background=random';
+        userName.textContent = 'Guest';
+        if (btnLogin) btnLogin.style.display = 'block';
+        if (btnLogout) btnLogout.style.display = 'none';
     }
 }
 
@@ -75,24 +79,28 @@ document.addEventListener('click', (e) => {
     }
 });
 
-export function loginWithGoogle() {
-    if (!auth) return alert("Firebase Auth is not available.");
+export async function loginWithGoogle() {
+    if (!auth) {
+        await customAlert("Firebase Auth is not available.");
+        return;
+    }
     
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch((error) => {
+    auth.signInWithPopup(provider).catch(async (error) => {
         console.error("Login failed:", error);
         if (error.code === 'auth/popup-blocked') {
-            alert("Pop-up blocked by browser. Allow pop-ups to log in.");
+            await customAlert("Pop-up blocked by browser. Allow pop-ups to log in.");
         } else {
-            alert(`Login failed: ${error.message}`);
+            await customAlert(`Login failed: ${error.message}`);
         }
     });
 }
 
-export function logout() {
+export async function logout() {
     if (!auth) return;
 
-    if (!confirm("Are you sure you want to log out?")) return;
+    const confirmed = await customConfirm("Are you sure you want to log out?");
+    if (!confirmed) return;
 
     // Matikan pantauan data sebelum sesi berakhir
     cleanupDatabaseListeners();
@@ -107,8 +115,8 @@ export function logout() {
         document.getElementById('detailContent').innerHTML = `<div class="empty-state">Select an entry to view details</div>`;
         document.getElementById('currentCategoryName').textContent = 'Loading...';
 
-    }).catch((error) => {
+    }).catch(async (error) => {
         console.error("Logout failed:", error);
-        alert("Logout failed.");
+        await customAlert("Logout failed.");
     });
 }

@@ -16,7 +16,7 @@ export function renderCategories() {
 
         if (isCategoryEditMode) {
             li.innerHTML = `
-                <span style="flex:1;overflow:hidden;text-overflow:ellipsis;font-weight:700;">${cat.title}</span>
+                <span class="category-item-title" style="flex:1;">${cat.title}</span>
                 <div style="display:flex;gap:6px;">
                     <button onclick="editCategory('${cat.id}',event)">✏️</button>
                     <button onclick="deleteCategory('${cat.id}',event)">🗑️</button>
@@ -28,7 +28,7 @@ export function renderCategories() {
             };
         } else {
             li.innerHTML = `
-                <span style="font-weight:700;">${cat.title}</span>
+                <span class="category-item-title" title="${cat.title}">${cat.title}</span>
                 <span class="item-count">${cat.items.length}</span>
             `;
             li.onclick = () => window.switchCategory(cat.id);

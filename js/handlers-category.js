@@ -7,6 +7,7 @@ import { findItem } from './utils.js';
 import { renderAll } from './ui-core.js';
 import { renderCategories } from './ui-category.js';
 import { closeModal } from './handlers-global.js';
+import { customConfirm, customPrompt } from './ui-dialog.js';
 
 export function switchCategory(id) {
     setCurrentCategoryId(id);
@@ -20,11 +21,11 @@ export function toggleCategoryEditMode() {
     renderCategories();
 }
 
-export function editCategory(id, e) {
+export async function editCategory(id, e) {
     if (e) e.stopImmediatePropagation();
     const cat = dashboardData.find(c => c.id === id);
     if (!cat) return;
-    const newTitle = prompt('Rename category:', cat.title);
+    const newTitle = await customPrompt('Rename category:', cat.title);
     if (newTitle !== null && newTitle.trim() !== '') {
         cat.title = newTitle.trim();
         saveData();
@@ -32,10 +33,11 @@ export function editCategory(id, e) {
     }
 }
 
-export function deleteCategory(id, e) {
+export async function deleteCategory(id, e) {
     if (e) e.stopImmediatePropagation();
     const isLast = dashboardData.length === 1;
-    if (!confirm(isLast ? 'This is the last category. Delete and create a new "General" category?' : 'Delete this category and all its entries?')) return;
+    const confirmed = await customConfirm(isLast ? 'This is the last category. Delete and create a new "General" category?' : 'Delete this category and all its entries?', 'Confirmation', true);
+    if (!confirmed) return;
 
     if (isLast) {
         dashboardData.length = 0;

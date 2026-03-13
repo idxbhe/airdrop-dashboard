@@ -1,6 +1,7 @@
 // js/handlers-global.js
 import { dashboardData, setDashboardData, saveData, repairData } from './state.js';
 import { renderAll } from './ui-core.js';
+import { customAlert, customConfirm } from './ui-dialog.js';
 
 export function handleSearch(e) {
     const q = e.target.value.toLowerCase();
@@ -35,20 +36,21 @@ export function importData(event) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
         try {
             const importedData = JSON.parse(e.target.result);
             if (!Array.isArray(importedData)) throw new Error('Invalid format');
             
-            if (confirm('Importing data will overwrite current data. Continue?')) {
+            const confirmed = await customConfirm('Importing data will overwrite current data. Continue?');
+            if (confirmed) {
                 setDashboardData(importedData);
                 repairData();
                 saveData();
                 renderAll();
-                alert('✅ Data imported successfully!');
+                await customAlert('✅ Data imported successfully!');
             }
         } catch (e) {
-            alert('❌ Failed to import data: Invalid JSON format.');
+            await customAlert('❌ Failed to import data: Invalid JSON format.');
         }
         event.target.value = ''; // Reset input
     };

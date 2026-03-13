@@ -8,6 +8,7 @@ import { renderAll } from './ui-core.js';
 import { renderEntries } from './ui-entry.js';
 import { showDetail } from './ui-detail.js';
 import { closeModal } from './handlers-global.js';
+import { customAlert, customConfirm } from './ui-dialog.js';
 
 export function toggleCheck(itemId, e) {
     e.stopPropagation();
@@ -164,10 +165,10 @@ export function openEntryModal(itemId = null) {
     modal.style.display = 'flex';
 }
 
-export function handleSaveEntry() {
+export async function handleSaveEntry() {
     const title = document.getElementById('inpT').value.trim();
     if (!title) {
-        alert("Title required!");
+        await customAlert("Title required!");
         return;
     }
 
@@ -248,17 +249,18 @@ export function handleResetTypeChange() {
     if (dayWrapper) dayWrapper.style.display = (enableReset && selType === 'day') ? 'block' : 'none';
 }
 
-export function editCurrentItem() {
+export async function editCurrentItem() {
     if (!selectedItemId) {
-        alert('Please select an entry first!');
+        await customAlert('Please select an entry first!');
         return;
     }
     openEntryModal(selectedItemId);
 }
 
-export function deleteCurrentItem() {
+export async function deleteCurrentItem() {
     if (!selectedItemId) return;
-    if (!confirm('Delete this entry?')) return;
+    const confirmed = await customConfirm('Delete this entry?', 'Confirmation', true);
+    if (!confirmed) return;
 
     for (let cat of dashboardData) {
         const idx = cat.items.findIndex(i => i.id === selectedItemId);
@@ -273,7 +275,7 @@ export function deleteCurrentItem() {
     document.getElementById('detailContent').innerHTML = `<div class="empty-state">Select an entry to view details</div>`;
 }
 
-export function removeDuplicates() {
+export async function removeDuplicates() {
     if (!currentCategoryId) return;
     
     const cat = dashboardData.find(c => c.id === currentCategoryId);
@@ -295,7 +297,8 @@ export function removeDuplicates() {
     }
 
     if (duplicateCount > 0) {
-        if (confirm(`Found ${duplicateCount} duplicates in this category. Remove duplicates?`)) {
+        const confirmed = await customConfirm(`Found ${duplicateCount} duplicates in this category. Remove duplicates?`, 'Confirmation', true);
+        if (confirmed) {
             cat.items = uniqueItems;
             
             // Jika selectedItem yang sedang aktif ternyata ikut terhapus karena duplikat
@@ -309,6 +312,6 @@ export function removeDuplicates() {
             renderEntries(currentCategoryId);
         }
     } else {
-        alert('No duplicates found in this category.');
+        await customAlert('No duplicates found in this category.');
     }
 }

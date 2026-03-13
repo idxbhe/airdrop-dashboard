@@ -22,6 +22,7 @@
     align-items: center;
     border-left: 3px solid transparent;
     transition: all 0.2s;
+    position: relative;
 }
 
 .category-item:hover {
@@ -34,8 +35,11 @@
     color: var(--accent);
 }
 
-.category-item span {
+.category-item-title {
     font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .item-count {

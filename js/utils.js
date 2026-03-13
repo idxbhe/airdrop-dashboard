@@ -1,4 +1,5 @@
 import { dashboardData } from './state.js';
+import { customAlert } from './ui-dialog.js';
 
 export function getFaviconHtml(u) {
     if (!u) return '';
@@ -85,6 +86,6 @@ export function getRemainingMs(item) {
 
 export function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
-        alert('✅ Link copied to clipboard!');
+        customAlert('✅ Link copied to clipboard!');
     });
 }

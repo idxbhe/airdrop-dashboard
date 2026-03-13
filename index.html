@@ -37,34 +37,41 @@
     </div>
 
     <header class="top-bar">
-        <div class="logo">Airdrop Dashboard <span style="font-size: 10px; opacity: 0.5;">v16.5</span></div>
+        <div class="logo" style="display: flex; flex-direction: column; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <a href="https://github.com/idxbhe/airdrop-dashboard" target="_blank" title="GitHub Repository" style="color: inherit; display: flex;">
+                    <svg height="20" viewBox="0 0 16 16" version="1.1" width="20" aria-hidden="true" fill="currentColor"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+                </a>
+                <span>Airdrop Dashboard</span>
+            </div>
+            <span style="font-size: 11px; color: #ff6b35; font-weight: bold; margin-top: -2px; letter-spacing: 0.5px;">wen jp?</span>
+        </div>
         <div class="top-actions" style="display: flex; gap: 8px; align-items: center;">
-            <button class="btn btn-small" onclick="exportData()" title="Export Data" style="padding: 4px 8px; font-size: 11px;">📤 EXPORT</button>
-            <button class="btn btn-small" onclick="document.getElementById('importFile').click()" title="Import Data" style="padding: 4px 8px; font-size: 11px;">📥 IMPORT</button>
             <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importData(event)">
             <input type="text" class="search-input" id="searchInput" placeholder="Search tasks...">
             
-            <!-- Tombol Login -->
-            <button id="btnLogin" class="btn btn-small btn-accent" onclick="window.loginWithGoogle()" style="padding: 4px 8px; font-size: 11px; display: none;">LOGIN GOOGLE</button>
-            
             <!-- Area Profil User (Dropdown) -->
-            <div id="userProfileArea" class="user-profile-dropdown" style="display: none;">
+            <div id="userProfileArea" class="user-profile-dropdown">
                 <div class="user-profile-trigger" onclick="window.toggleUserDropdown()">
-                    <img id="userAvatar" src="" alt="Avatar" referrerpolicy="no-referrer">
-                    <span id="userName"></span>
+                    <img id="userAvatar" src="https://ui-avatars.com/api/?name=Guest&background=random" alt="Avatar" referrerpolicy="no-referrer">
+                    <span id="userName">Guest</span>
                     <span style="font-size: 10px;">▼</span>
                 </div>
                 <div id="userDropdownMenu" class="dropdown-menu">
-                    <button class="dropdown-item text-danger" onclick="window.logout()">Log Out</button>
+                    <button class="dropdown-item" onclick="exportData()">Export Data</button>
+                    <button class="dropdown-item" onclick="document.getElementById('importFile').click()">Import Data</button>
+                    <hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);">
+                    <button id="btnLogin" class="dropdown-item text-accent" onclick="window.loginWithGoogle()">Login with Google</button>
+                    <button id="btnLogout" class="dropdown-item text-danger" onclick="window.logout()" style="display: none;">Log Out</button>
                 </div>
             </div>
         </div>
     </header>
 
     <div class="app-layout">
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>CATEGORIES</span>
+                <span class="header-title">CATEGORIES</span>
                 <div style="display: flex; gap: 6px;">
                     <button class="icon-btn" onclick="openCatModal()" title="New Category">➕</button>
                     <button class="icon-btn" onclick="toggleCategoryEditMode()" title="Edit Categories">⚙️</button>
@@ -72,6 +79,7 @@
             </div>
             <ul id="categoryList" class="category-list"></ul>
         </aside>
+        <div class="resizer" id="sidebarResizer"></div>
 
         <main class="main-panel">
             <div class="panel-header">
@@ -145,6 +153,17 @@
             <div class="modal-foot" id="noteEditControls" style="display: none; margin-top: 15px;">
                 <button class="btn" onclick="toggleNoteEdit()">CANCEL</button>
                 <button class="btn btn-accent" onclick="saveNoteFromModal()">SAVE NOTES</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="customDialogModal" style="z-index: 10000; display: none;">
+        <div class="modal" style="max-width: 400px; text-align: center;">
+            <h3 id="customDialogTitle" style="margin-top: 0;">Notice</h3>
+            <p id="customDialogMessage" style="margin: 15px 0; color: var(--text);"></p>
+            <div class="modal-foot" style="justify-content: center;">
+                <button class="btn" id="customDialogBtnCancel" style="display: none;">CANCEL</button>
+                <button class="btn btn-accent" id="customDialogBtnOk">OK</button>
             </div>
         </div>
     </div>

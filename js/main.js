@@ -16,11 +16,28 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('searchInput').addEventListener('input', handleSearch);
     
     const urlInput = document.getElementById('inpU');
+    const titleInput = document.getElementById('inpT');
     if (urlInput) {
-        urlInput.addEventListener('blur', () => {
+        urlInput.addEventListener('blur', async () => {
             let val = urlInput.value.trim();
             if (val && !/^https?:\/\//i.test(val)) {
-                urlInput.value = 'https://' + val;
+                val = 'https://' + val;
+                urlInput.value = val;
+            }
+            // Auto-detect title if title input is empty
+            if (val && titleInput && !titleInput.value.trim()) {
+                titleInput.placeholder = "Loading title...";
+                try {
+                    const response = await fetch(`https://api.microlink.io?url=${encodeURIComponent(val)}`);
+                    const json = await response.json();
+                    if (json.status === 'success' && json.data && json.data.title && !titleInput.value.trim()) {
+                        titleInput.value = json.data.title;
+                    }
+                } catch (e) {
+                    console.error("Failed to auto-detect title:", e);
+                } finally {
+                    titleInput.placeholder = "Title / Task Name";
+                }
             }
         });
     }
