@@ -5,17 +5,15 @@ export function getFaviconHtml(u) {
     try {
         const domain = new URL(u.startsWith('http') ? u : 'https://' + u).hostname;
         return `
-            <img src="https://unavatar.io/${domain}?fallback=https://www.google.com/s2/favicons?domain=${domain}&sz=64" 
-                 class="entry-icon" 
-                 data-domain="${domain}"
-                 data-step="1"
-                 onerror="if(window.handleFaviconError) window.handleFaviconError(this)">
+            <img src="https://unavatar.io/${domain}?fallback=https://cdn-icons-png.flaticon.com/512/3272/3272605.png"
+                 class="entry-icon"
+                 alt="icon"
+                 onerror="this.style.display='none'">
         `;
     } catch (e) {
         return '';
     }
 }
-
 export function findItem(id) {
     for (let cat of dashboardData) {
         const found = cat.items.find(i => i.id === id);

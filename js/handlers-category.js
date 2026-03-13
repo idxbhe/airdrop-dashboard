@@ -11,7 +11,7 @@ import { closeModal } from './handlers-global.js';
 export function switchCategory(id) {
     setCurrentCategoryId(id);
     setSelectedItemId(null);
-    document.getElementById('detailContent').innerHTML = `<div class="empty-state">Klik salah satu entry di tengah</div>`;
+    document.getElementById('detailContent').innerHTML = `<div class="empty-state">Click an entry in the middle</div>`;
     renderAll();
 }
 
@@ -24,7 +24,7 @@ export function editCategory(id, e) {
     if (e) e.stopImmediatePropagation();
     const cat = dashboardData.find(c => c.id === id);
     if (!cat) return;
-    const newTitle = prompt('Rename kategori:', cat.title);
+    const newTitle = prompt('Rename category:', cat.title);
     if (newTitle !== null && newTitle.trim() !== '') {
         cat.title = newTitle.trim();
         saveData();
@@ -35,7 +35,7 @@ export function editCategory(id, e) {
 export function deleteCategory(id, e) {
     if (e) e.stopImmediatePropagation();
     const isLast = dashboardData.length === 1;
-    if (!confirm(isLast ? 'Ini kategori terakhir. Hapus dan buat "General" baru?' : 'Hapus kategori ini beserta semua entry-nya?')) return;
+    if (!confirm(isLast ? 'This is the last category. Delete and create a new "General" category?' : 'Delete this category and all its entries?')) return;
 
     if (isLast) {
         dashboardData.length = 0;
@@ -52,7 +52,7 @@ export function deleteCategory(id, e) {
 
     if (selectedItemId && !findItem(selectedItemId)) {
         setSelectedItemId(null);
-        document.getElementById('detailContent').innerHTML = `<div class="empty-state">Pilih entri untuk melihat detail</div>`;
+        document.getElementById('detailContent').innerHTML = `<div class="empty-state">Select an entry to view details</div>`;
     }
 
     saveData();

@@ -23,7 +23,7 @@ export function openNoteModal() {
     const toggleBtn = document.getElementById('btnToggleNoteEdit');
 
     if (titleEl) {
-        titleEl.textContent = `CATATAN [${item.t}]`;
+        titleEl.textContent = `NOTES [${item.t}]`;
     }
 
     editArea.value = item.n || '';
@@ -39,14 +39,14 @@ export function openNoteModal() {
             viewArea.innerHTML = `<div style="white-space: pre-wrap; font-family: inherit;">${safeText}</div>`;
         }
     } else {
-        viewArea.innerHTML = '<div class="empty-state">Tidak ada catatan.</div>';
+        viewArea.innerHTML = '<div class="empty-state">No notes available.</div>';
     }
 
     viewArea.style.display = 'block';
     editArea.style.display = 'none';
     controls.style.display = 'none';
     toggleBtn.style.display = 'inline-block';
-    toggleBtn.textContent = '✏️ Mode Edit';
+    toggleBtn.textContent = '✏️ Edit Mode';
 
     modal.style.display = 'flex';
 }

@@ -76,15 +76,15 @@ document.addEventListener('click', (e) => {
 });
 
 export function loginWithGoogle() {
-    if (!auth) return alert("Firebase Auth tidak tersedia.");
+    if (!auth) return alert("Firebase Auth is not available.");
     
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).catch((error) => {
         console.error("Login failed:", error);
         if (error.code === 'auth/popup-blocked') {
-            alert("Pop-up diblokir oleh browser. Izinkan pop-up untuk login.");
+            alert("Pop-up blocked by browser. Allow pop-ups to log in.");
         } else {
-            alert(`Gagal login: ${error.message}`);
+            alert(`Login failed: ${error.message}`);
         }
     });
 }
@@ -92,7 +92,7 @@ export function loginWithGoogle() {
 export function logout() {
     if (!auth) return;
 
-    if (!confirm("Anda yakin ingin keluar?")) return;
+    if (!confirm("Are you sure you want to log out?")) return;
 
     // Matikan pantauan data sebelum sesi berakhir
     cleanupDatabaseListeners();
@@ -104,11 +104,11 @@ export function logout() {
         // Reset UI agar render kosong, state auth observer akan mengambil alih sisanya
         document.getElementById('categoryList').innerHTML = '';
         document.getElementById('entriesList').innerHTML = '';
-        document.getElementById('detailContent').innerHTML = `<div class="empty-state">Pilih entri untuk melihat detail</div>`;
-        document.getElementById('currentCategoryName').textContent = 'Memuat...';
+        document.getElementById('detailContent').innerHTML = `<div class="empty-state">Select an entry to view details</div>`;
+        document.getElementById('currentCategoryName').textContent = 'Loading...';
 
     }).catch((error) => {
         console.error("Logout failed:", error);
-        alert("Gagal logout.");
+        alert("Logout failed.");
     });
 }

@@ -40,15 +40,15 @@ export function importData(event) {
             const importedData = JSON.parse(e.target.result);
             if (!Array.isArray(importedData)) throw new Error('Invalid format');
             
-            if (confirm('Import data akan menimpa data saat ini. Lanjutkan?')) {
+            if (confirm('Importing data will overwrite current data. Continue?')) {
                 setDashboardData(importedData);
                 repairData();
                 saveData();
                 renderAll();
-                alert('✅ Data berhasil diimport!');
+                alert('✅ Data imported successfully!');
             }
-        } catch (err) {
-            alert('❌ Gagal mengimport data: Format JSON tidak valid.');
+        } catch (e) {
+            alert('❌ Failed to import data: Invalid JSON format.');
         }
         event.target.value = ''; // Reset input
     };

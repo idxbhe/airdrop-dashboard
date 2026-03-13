@@ -56,7 +56,7 @@ export function openEntryModal(itemId = null) {
     resetTypeDiv.innerHTML = `
         <label class="label-tiny">Reset Type</label>
         <select id="inpResetType" onchange="handleResetTypeChange()">
-            <option value="daily">Daily (24 Jam)</option>
+            <option value="daily">Daily (24 Hours)</option>
             <option value="weekly">Weekly (7 Days)</option>
             <option value="clock:07:00">Every 07.00 AM</option>
             <option value="monday:07:00">Every Monday (at 07.00 AM)</option>
@@ -73,9 +73,9 @@ export function openEntryModal(itemId = null) {
     durWrapper.innerHTML = `
         <label class="label-tiny">Custom Duration</label>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
-            <input type="number" id="durH" min="0" placeholder="Jam">
-            <input type="number" id="durM" min="0" max="59" placeholder="Menit">
-            <input type="number" id="durS" min="0" max="59" placeholder="Detik">
+            <input type="number" id="durH" min="0" placeholder="Hours">
+            <input type="number" id="durM" min="0" max="59" placeholder="Minutes">
+            <input type="number" id="durS" min="0" max="59" placeholder="Seconds">
         </div>
     `;
     grid.appendChild(durWrapper);
@@ -250,7 +250,7 @@ export function handleResetTypeChange() {
 
 export function editCurrentItem() {
     if (!selectedItemId) {
-        alert('Pilih entry terlebih dahulu!');
+        alert('Please select an entry first!');
         return;
     }
     openEntryModal(selectedItemId);
@@ -258,7 +258,7 @@ export function editCurrentItem() {
 
 export function deleteCurrentItem() {
     if (!selectedItemId) return;
-    if (!confirm('Hapus entry ini?')) return;
+    if (!confirm('Delete this entry?')) return;
 
     for (let cat of dashboardData) {
         const idx = cat.items.findIndex(i => i.id === selectedItemId);
@@ -270,7 +270,7 @@ export function deleteCurrentItem() {
     setSelectedItemId(null);
     saveData();
     renderAll();
-    document.getElementById('detailContent').innerHTML = `<div class="empty-state">Pilih entri untuk melihat detail</div>`;
+    document.getElementById('detailContent').innerHTML = `<div class="empty-state">Select an entry to view details</div>`;
 }
 
 export function removeDuplicates() {
@@ -295,20 +295,20 @@ export function removeDuplicates() {
     }
 
     if (duplicateCount > 0) {
-        if (confirm(`Ditemukan ${duplicateCount} duplikasi pada kategori ini. Hapus duplikasi?`)) {
+        if (confirm(`Found ${duplicateCount} duplicates in this category. Remove duplicates?`)) {
             cat.items = uniqueItems;
             
             // Jika selectedItem yang sedang aktif ternyata ikut terhapus karena duplikat
             const isSelectedStillExists = cat.items.some(i => i.id === selectedItemId);
             if (selectedItemId && !isSelectedStillExists) {
                 setSelectedItemId(null);
-                document.getElementById('detailContent').innerHTML = `<div class="empty-state">Pilih entri untuk melihat detail</div>`;
+                document.getElementById('detailContent').innerHTML = `<div class="empty-state">Select an entry to view details</div>`;
             }
 
             saveData();
             renderEntries(currentCategoryId);
         }
     } else {
-        alert('Tidak ada duplikasi ditemukan pada kategori ini.');
+        alert('No duplicates found in this category.');
     }
 }

@@ -32,7 +32,7 @@
     <div id="authLoadingScreen" class="loading-overlay">
         <div class="loading-content">
             <div class="spinner">🚀</div>
-            <h2 style="margin:0; font-size:16px; letter-spacing:1px;">Memuat Dashboard...</h2>
+            <h2 style="margin:0; font-size:16px; letter-spacing:1px;">Loading Dashboard...</h2>
         </div>
     </div>
 
@@ -64,7 +64,7 @@
     <div class="app-layout">
         <aside class="sidebar">
             <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>KATEGORI</span>
+                <span>CATEGORIES</span>
                 <div style="display: flex; gap: 6px;">
                     <button class="icon-btn" onclick="openCatModal()" title="New Category">➕</button>
                     <button class="icon-btn" onclick="toggleCategoryEditMode()" title="Edit Categories">⚙️</button>
@@ -75,9 +75,9 @@
 
         <main class="main-panel">
             <div class="panel-header">
-                <span id="currentCategoryName">Memuat...</span>
+                <span id="currentCategoryName">Loading...</span>
                 <div style="margin-left:auto; display:flex; gap:8px;">
-                    <button class="btn btn-small" onclick="removeDuplicates()" title="Hapus duplikasi pada kategori ini">🧹 REMOVE DUPLICATES</button>
+                    <button class="btn btn-small" onclick="removeDuplicates()" title="Remove duplicates in this category">🧹 REMOVE DUPLICATES</button>
                     <button class="btn btn-accent btn-small" onclick="openEntryModal()">➕ ADD ENTRY</button>
                 </div>
             </div>
@@ -88,14 +88,14 @@
 
         <section class="detail-panel">
             <div class="detail-header">
-                <span>DETAIL & CATATAN</span>
+                <span>DETAILS & NOTES</span>
                 <div class="detail-controls">
                     <button class="btn btn-small" onclick="editCurrentItem()">✏️ Edit</button>
                     <button class="btn btn-small btn-danger" onclick="deleteCurrentItem()">🗑️</button>
                 </div>
             </div>
             <div id="detailContent" class="detail-content">
-                <div class="empty-state">Pilih entri untuk melihat detail</div>
+                <div class="empty-state">Select an entry to view details</div>
             </div>
         </section>
     </div>
@@ -103,9 +103,9 @@
     <div class="modal-overlay" id="entryModal">
         <div class="modal" style="width:700px;">
             <h3>MANAGE ENTRY</h3>
-            <input type="text" id="inpT" placeholder="Judul / Nama Tugas">
-            <input type="text" id="inpU" placeholder="URL (contoh: grok.com)">
-            <textarea id="inpN" placeholder="Catatan atau instruksi tambahan..." rows="12"></textarea>
+            <input type="text" id="inpT" placeholder="Title / Task Name">
+            <input type="text" id="inpU" placeholder="URL (e.g., grok.com)">
+            <textarea id="inpN" placeholder="Notes or additional instructions..." rows="12"></textarea>
             
             <div class="settings-grid">
                 </div>
@@ -120,7 +120,7 @@
     <div class="modal-overlay" id="catModal">
         <div class="modal">
             <h3>NEW CATEGORY</h3>
-            <input type="text" id="inpCatName" placeholder="Nama Kategori (ex: Testnet, Nodes)">
+            <input type="text" id="inpCatName" placeholder="Category Name (e.g., Testnet, Nodes)">
             <div class="modal-foot">
                 <button class="btn" onclick="closeModal('catModal')">CANCEL</button>
                 <button class="btn btn-accent" onclick="submitCat()">CREATE</button>
@@ -131,20 +131,20 @@
     <div class="modal-overlay" id="noteModal">
         <div class="modal modal-large">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 id="noteModalTitle" style="margin: 0; color: var(--accent);">CATATAN</h3>
+                <h3 id="noteModalTitle" style="margin: 0; color: var(--accent);">NOTES</h3>
                 <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-accent" id="btnToggleNoteEdit" onclick="toggleNoteEdit()">✏️ Mode Edit</button>
-                    <button class="btn btn-danger" onclick="closeModal('noteModal')">✖ Tutup</button>
+                    <button class="btn btn-accent" id="btnToggleNoteEdit" onclick="toggleNoteEdit()">✏️ Edit Mode</button>
+                    <button class="btn btn-danger" onclick="closeModal('noteModal')">✖ Close</button>
                 </div>
             </div>
             
             <div id="noteViewArea" class="detail-note modal-body-flex"></div>
             
-            <textarea id="noteEditArea" class="note-editor-area mono-font" style="display: none;" placeholder="Ketik catatan di sini..."></textarea>
+            <textarea id="noteEditArea" class="note-editor-area mono-font" style="display: none;" placeholder="Type notes here..."></textarea>
             
             <div class="modal-foot" id="noteEditControls" style="display: none; margin-top: 15px;">
-                <button class="btn" onclick="toggleNoteEdit()">BATAL</button>
-                <button class="btn btn-accent" onclick="saveNoteFromModal()">SIMPAN CATATAN</button>
+                <button class="btn" onclick="toggleNoteEdit()">CANCEL</button>
+                <button class="btn btn-accent" onclick="saveNoteFromModal()">SAVE NOTES</button>
             </div>
         </div>
     </div>

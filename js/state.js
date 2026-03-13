@@ -39,7 +39,7 @@ try {
     db = firebase.database();
     auth = firebase.auth(); // Inisialisasi Auth
 } catch (error) {
-    console.warn("⚠️ Firebase gagal diinisialisasi atau config tidak ditemukan. Berjalan di Mode Guest (Offline/Lokal).", error);
+    console.warn("⚠️ Firebase failed to initialize or config not found. Running in Guest Mode (Offline/Local).", error);
     isGuestMode = true;
     isAuthReady = true; // Guest mode langsung siap
 }

@@ -50,8 +50,8 @@ export function showDetail(id) {
     if (createdAt) {
         const diffMs = Date.now() - createdAt;
         const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        const dayText = days === 0 ? 'Hari ini' : `${days} hari yang lalu`;
-        addedHtml = `<div class="detail-meta" style="margin-top: 4px; font-style: italic; opacity: 0.7;">Ditambahkan: ${dayText}</div>`;
+        const dayText = days === 0 ? 'Today' : `${days} days ago`;
+        addedHtml = `<div class="detail-meta" style="margin-top: 4px; font-style: italic; opacity: 0.7;">Added: ${dayText}</div>`;
     }
 
     // Mengambil catatan dan memprosesnya sesuai state isMarkdownMode
@@ -79,7 +79,7 @@ export function showDetail(id) {
         ${countdownHtml}
         
         <div class="note-header-controls">
-            <span>CATATAN</span>
+            <span>NOTES</span>
             <div class="note-buttons">
                 <label class="switch-wrapper">
                     <span class="switch-label">MARKDOWN</span>
