@@ -51,17 +51,27 @@ export function createEntryElement(item) {
     const isNone = item.r === 'none';
     const hasReset = item.r && item.r !== 'checklist' && !isNone;
 
-    let statusHtml = '';
+    const itemStatus = item.s || 'UNKNOWN';
+    let statusClass = 'status-unknown';
+    if (itemStatus === 'ELIGABLE') statusClass = 'status-eligable';
+    else if (itemStatus === 'NOT ELIGABLE') statusClass = 'status-not-eligable';
+    
+    const badgeHtml = `<div class="status-badge ${statusClass}">
+        <span class="status-label">Status:</span>
+        <span class="status-val">${itemStatus}</span>
+    </div>`;
+
+    let statusHtml = badgeHtml;
     if (hasReset) {
         if (item.c) {
-            statusHtml = `
+            statusHtml += `
                 <div class="reset-box">
                     <span class="reset-label">RESET IN</span>
                     <span class="countdown" data-id="${item.id}">--:--:--</span>
                 </div>
             `;
         } else {
-            statusHtml = `<span class="ready-text">READY TO COMPLETE</span>`;
+            statusHtml += `<span class="ready-text">READY TO COMPLETE</span>`;
         }
     }
 

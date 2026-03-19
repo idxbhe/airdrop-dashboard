@@ -5,11 +5,25 @@ export function getFaviconHtml(u) {
     if (!u) return '';
     try {
         const domain = new URL(u.startsWith('http') ? u : 'https://' + u).hostname;
+        const cachedUrl = localStorage.getItem('fav_' + domain);
+        const fallbacks = [
+            `https://icon.horse/icon/${domain}`,
+            `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+            `https://api.faviconkit.com/${domain}/144`,
+            `https://cdn-icons-png.flaticon.com/512/3272/3272605.png`
+        ];
+        
+        const primaryUrl = cachedUrl || `https://unavatar.io/${domain}?fallback=false`;
+        
         return `
-            <img src="https://unavatar.io/${domain}?fallback=https://cdn-icons-png.flaticon.com/512/3272/3272605.png"
+            <img src="${primaryUrl}"
                  class="entry-icon"
                  alt="icon"
-                 onerror="this.style.display='none'">
+                 data-domain="${domain}"
+                 data-fallbacks="${fallbacks.join(' ')}"
+                 data-fb-idx="0"
+                 onload="const d=this.dataset.domain; const c=localStorage.getItem('fav_'+d); if(c!==this.src){ console.log('Caching success icon for '+d+':', this.src); localStorage.setItem('fav_'+d, this.src); } else { console.log('Loaded from cache for '+d+':', this.src); }"
+                 onerror="const d=this.dataset.domain; console.warn('Failed loading icon for '+d+':', this.src); let fbs = this.dataset.fallbacks.split(' '); let idx = parseInt(this.dataset.fbIdx); if (idx < fbs.length) { console.log('Trying fallback ' + (idx + 1) + ' for '+d+':', fbs[idx]); this.src = fbs[idx]; this.dataset.fbIdx = idx + 1; } else { console.error('All fallbacks failed for '+d); this.style.display = 'none'; }">
         `;
     } catch (e) {
         return '';

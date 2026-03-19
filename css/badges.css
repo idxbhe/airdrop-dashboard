@@ -9,7 +9,7 @@
 .reset-box, .detail-reset-box {
     background: var(--accent-dim);
     padding: 5px 10px;
-    border-radius: 6px;
+    border-radius: 3px;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -26,4 +26,40 @@
     color: var(--pending);
     font-weight: 700;
     font-size: 11px;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-label {
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.status-val {
+    font-family: monospace;
+}
+
+.status-eligable {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-not-eligable {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.status-unknown {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
 }

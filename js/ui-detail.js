@@ -18,18 +18,28 @@ export function showDetail(id) {
     const favicon = getFaviconHtml(item.u);
     const fullUrl = item.u ? (item.u.startsWith('http') ? item.u : 'https://' + item.u) : '';
 
-    let countdownHtml = '';
+    const itemStatus = item.s || 'UNKNOWN';
+    let statusClass = 'status-unknown';
+    if (itemStatus === 'ELIGABLE') statusClass = 'status-eligable';
+    else if (itemStatus === 'NOT ELIGABLE') statusClass = 'status-not-eligable';
+    
+    const badgeHtml = `<div class="status-badge ${statusClass}">
+        <span class="status-label">Status:</span>
+        <span class="status-val">${itemStatus}</span>
+    </div>`;
+
+    let countdownHtml = badgeHtml;
     const hasReset = item.r && item.r !== 'checklist' && item.r !== 'none';
     if (hasReset) {
         if (item.c) {
-            countdownHtml = `
+            countdownHtml += `
                 <div class="detail-reset-box">
                     <span class="reset-label">RESET IN</span>
                     <span class="countdown-detail" data-id="${item.id}">--:--:--</span>
                 </div>
             `;
         } else {
-            countdownHtml = `<span class="detail-ready">READY TO COMPLETE</span>`;
+            countdownHtml += `<span class="detail-ready">READY TO COMPLETE</span>`;
         }
     }
 

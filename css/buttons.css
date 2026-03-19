@@ -41,7 +41,7 @@
     color: var(--accent);
     border: none;
     padding: 0 10px;
-    border-radius: 4px;
+    border-radius: 3px;
     font-size: 10px;
     text-decoration: none;
     font-weight: 600;
@@ -61,7 +61,7 @@
     color: var(--accent);
     border: none;
     padding: 5px 10px;
-    border-radius: 4px;
+    border-radius: 3px;
     font-size: 10px;
     text-decoration: none;
     font-weight: 600;

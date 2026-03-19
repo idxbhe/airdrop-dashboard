@@ -44,6 +44,17 @@ export function openEntryModal(itemId = null) {
     `;
     grid.appendChild(chkChecklistDiv);
 
+    const statusDiv = document.createElement('div');
+    statusDiv.innerHTML = `
+        <label class="label-tiny">Status</label>
+        <select id="inpStatus">
+            <option value="UNKNOWN">UNKNOWN</option>
+            <option value="ELIGABLE">ELIGABLE</option>
+            <option value="NOT ELIGABLE">NOT ELIGABLE</option>
+        </select>
+    `;
+    grid.appendChild(statusDiv);
+
     const chkResetDiv = document.createElement('div');
     chkResetDiv.innerHTML = `
         <label class="label-tiny">Enable Reset</label>
@@ -129,6 +140,9 @@ export function openEntryModal(itemId = null) {
             document.getElementById('inpT').value = item.t || '';
             document.getElementById('inpU').value = item.u || '';
             document.getElementById('inpN').value = item.n || '';
+            
+            const inpStatus = document.getElementById('inpStatus');
+            if (inpStatus) inpStatus.value = item.s || 'UNKNOWN';
 
             const r = item.r || 'checklist';
             chkChecklist.checked = r !== 'none';
@@ -205,6 +219,8 @@ export async function handleSaveEntry() {
 
     const cat = dashboardData.find(c => c.id === currentCategoryId);
     if (!cat) return;
+    
+    const statusVal = document.getElementById('inpStatus') ? document.getElementById('inpStatus').value : 'UNKNOWN';
 
     if (activeItemId) {
         const item = findItem(activeItemId);
@@ -213,6 +229,7 @@ export async function handleSaveEntry() {
             item.u = url;
             item.n = note;
             item.r = resetType;
+            item.s = statusVal;
         }
     } else {
         cat.items.push({
@@ -221,6 +238,7 @@ export async function handleSaveEntry() {
             u: url,
             n: note,
             r: resetType,
+            s: statusVal,
             lc: 0,
             c: false,
             createdAt: Date.now()
