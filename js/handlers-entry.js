@@ -51,6 +51,7 @@ export function openEntryModal(itemId = null) {
             <option value="UNKNOWN">UNKNOWN</option>
             <option value="ELIGABLE">ELIGABLE</option>
             <option value="NOT ELIGABLE">NOT ELIGABLE</option>
+            <option value="ABANDONED">ABANDONED</option>
         </select>
     `;
     grid.appendChild(statusDiv);

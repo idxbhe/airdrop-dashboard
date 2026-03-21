@@ -55,11 +55,11 @@ export function createEntryElement(item) {
     let statusClass = 'status-unknown';
     if (itemStatus === 'ELIGABLE') statusClass = 'status-eligable';
     else if (itemStatus === 'NOT ELIGABLE') statusClass = 'status-not-eligable';
-    
-    const badgeHtml = `<div class="status-badge ${statusClass}">
-        <span class="status-label">Status:</span>
+    else if (itemStatus === 'ABANDONED') statusClass = 'status-abandoned';
+
+    const badgeHtml = itemStatus !== 'UNKNOWN' ? `<div class="status-badge-list ${statusClass}">
         <span class="status-val">${itemStatus}</span>
-    </div>`;
+    </div>` : '';
 
     let statusHtml = badgeHtml;
     if (hasReset) {
@@ -71,10 +71,9 @@ export function createEntryElement(item) {
                 </div>
             `;
         } else {
-            statusHtml += `<span class="ready-text">READY TO COMPLETE</span>`;
+            statusHtml += `<span class="ready-text">Ready to complete</span>`;
         }
     }
-
     const checkboxHtml = !isNone ? `
         <input type="checkbox" class="chk-box" ${item.c ? 'checked' : ''} onclick="toggleCheck('${item.id}',event)">
     ` : '';

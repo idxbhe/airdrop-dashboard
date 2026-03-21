@@ -5,7 +5,7 @@ import { initResizable, updateAllCountdowns, renderAll } from './ui-core.js';
 import { handleSearch, closeModal, exportData, importData } from './handlers-global.js';
 import { switchCategory, toggleCategoryEditMode, editCategory, deleteCategory, openCatModal, submitCat } from './handlers-category.js';
 import { toggleCheck, openEntryModal, handleSaveEntry, handleResetTypeChange, editCurrentItem, deleteCurrentItem, removeDuplicates } from './handlers-entry.js';
-import { toggleMarkdownMode, openNoteModal, toggleNoteEdit, saveNoteFromModal } from './handlers-note.js';
+import { toggleMarkdownMode, openNoteModal, toggleNoteEdit, saveNoteFromModal, toggleInlineNoteEdit, saveInlineNote, handleStatusChange } from './handlers-note.js';
 import { initAuth, loginWithGoogle, logout, toggleUserDropdown } from './auth.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -73,3 +73,6 @@ window.toggleMarkdownMode = toggleMarkdownMode;
 window.openNoteModal = openNoteModal;
 window.toggleNoteEdit = toggleNoteEdit;
 window.saveNoteFromModal = saveNoteFromModal;
+window.toggleInlineNoteEdit = toggleInlineNoteEdit;
+window.saveInlineNote = saveInlineNote;
+window.handleStatusChange = handleStatusChange;

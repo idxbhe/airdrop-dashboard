@@ -39,6 +39,15 @@
     gap: 6px;
 }
 
+.status-badge-list {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .status-label {
     color: #ffffff;
     font-size: 10px;
@@ -49,6 +58,35 @@
     font-family: monospace;
 }
 
+.status-select-inline {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: inherit;
+    font-family: monospace;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 2px 20px 2px 6px;
+    outline: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="none" height="14" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z" fill="white"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 2px center;
+    transition: all 0.2s;
+}
+
+.status-select-inline:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.status-select-inline option {
+    background: #1c1c1f;
+    color: #fff;
+}
+
 .status-eligable {
     background: rgba(40, 167, 69, 0.1);
     color: #28a745;
@@ -57,6 +95,11 @@
 .status-not-eligable {
     background: rgba(220, 53, 69, 0.1);
     color: #dc3545;
+}
+
+.status-abandoned {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
 }
 
 .status-unknown {

@@ -84,3 +84,48 @@ export function saveNoteFromModal() {
     showDetail(selectedItemId);
     openNoteModal();
 }
+
+export function toggleInlineNoteEdit() {
+    const viewArea = document.getElementById('inlineNoteViewArea');
+    const editContainer = document.getElementById('inlineNoteEditContainer');
+    const toggleBtn = document.getElementById('btnInlineNoteEdit');
+
+    const isEditing = editContainer.style.display === 'block';
+
+    if (isEditing) {
+        viewArea.style.display = 'block';
+        editContainer.style.display = 'none';
+        toggleBtn.textContent = '✏️';
+        toggleBtn.title = 'Edit Note';
+    } else {
+        viewArea.style.display = 'none';
+        editContainer.style.display = 'block';
+        toggleBtn.textContent = '✖️';
+        toggleBtn.title = 'Cancel Edit';
+    }
+}
+
+export function saveInlineNote(id) {
+    const item = findItem(id);
+    if (!item) return;
+
+    const editArea = document.getElementById('inlineNoteEditArea');
+    item.n = editArea.value;
+
+    saveData();
+    showDetail(id);
+}
+
+export function handleStatusChange(id, newStatus) {
+    import('./state.js').then(({ currentCategoryId }) => {
+        const item = findItem(id);
+        if (!item) return;
+
+        item.s = newStatus;
+        saveData();
+        
+        import('./ui-entry.js').then(({ renderEntries }) => {
+            renderEntries(currentCategoryId);
+        });
+    });
+}

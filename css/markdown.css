@@ -17,6 +17,8 @@
     border: 1px solid var(--border);
     margin-top: 4px;
     min-height: 200px;
+    max-height: 60vh;
+    overflow-y: auto;
     overflow-wrap: break-word;
 }
 
