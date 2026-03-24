@@ -1,5 +1,9 @@
-import { dashboardData } from './state.js';
+import { dashboardData, serverTimeOffset } from './state.js';
 import { customAlert } from './ui-dialog.js';
+
+export function getServerTime() {
+    return Date.now() + (serverTimeOffset || 0);
+}
 
 export function getFaviconHtml(u) {
     if (!u) return '';
@@ -40,7 +44,7 @@ export function findItem(id) {
 export function getNextResetTimestamp(item) {
     if (!item || !item.r || item.r === 'checklist' || item.r === 'none') return null;
 
-    const base = item.lc > 0 ? item.lc : Date.now();
+    const base = item.lc > 0 ? item.lc : getServerTime();
 
     if (item.r === 'daily') return base + 24 * 60 * 60 * 1000;
     if (item.r === 'weekly') return base + 7 * 24 * 60 * 60 * 1000;
@@ -94,7 +98,7 @@ export function getRemainingMs(item) {
     if (!item.c) return 0;
     const target = getNextResetTimestamp(item);
     if (!target) return Infinity;
-    const rem = target - Date.now();
+    const rem = target - getServerTime();
     return rem > 0 ? rem : 0;
 }
 

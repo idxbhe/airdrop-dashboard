@@ -1,6 +1,6 @@
 // js/ui-core.js
 import { dashboardData, currentCategoryId, selectedItemId, saveData, setCurrentCategoryId } from './state.js';
-import { getNextResetTimestamp, findItem } from './utils.js';
+import { getNextResetTimestamp, findItem, getServerTime } from './utils.js';
 import { renderCategories } from './ui-category.js';
 import { renderEntries } from './ui-entry.js';
 import { showDetail } from './ui-detail.js';
@@ -11,7 +11,7 @@ export function renderAll() {
         saveData();
     }
 
-    if (!currentCategoryId || !dashboardData.find(c => c.id === currentCategoryId)) {
+    if (!currentCategoryId || (!dashboardData.find(c => c.id === currentCategoryId) && !currentCategoryId.startsWith('filter_'))) {
         setCurrentCategoryId(dashboardData[0].id);
     }
 
@@ -100,7 +100,7 @@ export function initResizable() {
 }
 
 export function updateAllCountdowns() {
-    const now = Date.now();
+    const now = getServerTime();
     let needsRender = false;
 
     dashboardData.forEach(cat => {

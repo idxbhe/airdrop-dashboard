@@ -8,3 +8,8 @@ promt-cli.md
 GEMINI.md
 Dashboard.lnk
 start-dashboard.bat
+.aider.chat.history.md
+.aider.input.history
+.aider.tags.cache.v4/
+.env
+deepseek-api.txt

@@ -14,6 +14,7 @@ export let auth = null; // Tambahan auth
 // State Auth Baru
 export let currentUser = null;
 export let isAuthReady = false;
+export let serverTimeOffset = 0;
 
 // Path & Keys
 export let userPath = 'dashboard_data'; 
@@ -77,6 +78,11 @@ export function repairData() {
             dashboardData = [];
         }
     }
+
+    // Remove legacy default categories if they exist (they are now virtual filters)
+    const defaultCats = ["NOT ELIGABLE", "ABANDONED", "ELIGABLE"];
+    dashboardData = dashboardData.filter(cat => !defaultCats.includes(cat.title));
+
     dashboardData.forEach(cat => {
         if (!cat.title) cat.title = "General";
         if (!cat.items || !Array.isArray(cat.items)) {
@@ -201,6 +207,10 @@ export function startLoadingProcess(onDataLoadedCallback) {
         if (onDataLoadedCallback) onDataLoadedCallback();
         return;
     }
+
+    db.ref('.info/serverTimeOffset').on('value', (snapshot) => {
+        serverTimeOffset = snapshot.val() || 0;
+    });
 
     const path = getUserPath();
 

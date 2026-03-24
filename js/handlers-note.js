@@ -117,7 +117,7 @@ export function saveInlineNote(id) {
 }
 
 export function handleStatusChange(id, newStatus) {
-    import('./state.js').then(({ currentCategoryId }) => {
+    import('./state.js').then(({ currentCategoryId, saveData }) => {
         const item = findItem(id);
         if (!item) return;
 
@@ -126,6 +126,12 @@ export function handleStatusChange(id, newStatus) {
         
         import('./ui-entry.js').then(({ renderEntries }) => {
             renderEntries(currentCategoryId);
+        });
+        import('./ui-category.js').then(({ renderCategories }) => {
+            renderCategories();
+        });
+        import('./ui-detail.js').then(({ showDetail }) => {
+            showDetail(id);
         });
     });
 }

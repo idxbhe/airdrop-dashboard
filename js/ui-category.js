@@ -11,7 +11,7 @@ export function renderCategories() {
 
     dashboardData.forEach(cat => {
         const li = document.createElement('li');
-        li.className = `category-item ${cat.id === currentCategoryId ? 'active' : ''}`;
+        li.className = `category-item real-category ${cat.id === currentCategoryId ? 'active' : ''}`;
         li.dataset.id = cat.id;
 
         if (isCategoryEditMode) {
@@ -37,6 +37,56 @@ export function renderCategories() {
         ul.appendChild(li);
     });
 
+    // Add Divider as an li element
+    const dividerLi = document.createElement('li');
+    dividerLi.style.listStyle = 'none';
+    dividerLi.innerHTML = `
+        <div style="margin-top: 8px; border-top: 1px solid var(--border); padding: 12px 16px 4px 16px; font-size: 11px; font-weight: 700; color: var(--text-dim); letter-spacing: 1px;">
+            FILTERS
+        </div>
+    `;
+    ul.appendChild(dividerLi);
+
+    // Calculate virtual category counts
+    let countEligable = 0;
+    let countNotEligable = 0;
+    let countAbandoned = 0;
+
+    dashboardData.forEach(cat => {
+        cat.items.forEach(item => {
+            if (item.s === 'ELIGABLE') countEligable++;
+            if (item.s === 'NOT ELIGABLE') countNotEligable++;
+            if (item.s === 'ABANDONED') countAbandoned++;
+        });
+    });
+
+    const virtualCats = [
+        { id: 'filter_eligable', title: 'ELIGABLE', count: countEligable, color: '#28a745' },
+        { id: 'filter_not_eligable', title: 'NOT ELIGABLE', count: countNotEligable, color: '#dc3545' },
+        { id: 'filter_abandoned', title: 'ABANDONED', count: countAbandoned, color: '#ffc107' }
+    ];
+
+    virtualCats.forEach(vCat => {
+        const li = document.createElement('li');
+        li.className = `category-item virtual-category ${vCat.id === currentCategoryId ? 'active' : ''}`;
+        li.dataset.id = vCat.id;
+
+        if (isCategoryEditMode) {
+            li.innerHTML = `
+                <span class="category-item-title" style="flex:1; color: ${vCat.color};">${vCat.title}</span>
+            `;
+            li.style.cursor = "pointer";
+            li.onclick = () => window.switchCategory(vCat.id);
+        } else {
+            li.innerHTML = `
+                <span class="category-item-title" title="${vCat.title}" style="color: ${vCat.color};">${vCat.title}</span>
+                <span class="item-count">${vCat.count}</span>
+            `;
+            li.onclick = () => window.switchCategory(vCat.id);
+        }
+        ul.appendChild(li);
+    });
+
     initCategoryDropTargets();
 
     if (categorySortable) {
@@ -47,8 +97,13 @@ export function renderCategories() {
     if (!isCategoryEditMode) {
         setCategorySortable(Sortable.create(ul, {
             animation: 180,
+            draggable: '.real-category', // Only sort real categories
             onEnd: () => {
-                const newOrderIds = Array.from(ul.children).map(li => li.dataset.id);
+                // Ensure we only get IDs of real categories
+                const newOrderIds = Array.from(ul.children)
+                    .filter(li => li.classList.contains('real-category'))
+                    .map(li => li.dataset.id);
+                
                 dashboardData.sort((a, b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
                 saveData();
             }
@@ -57,7 +112,7 @@ export function renderCategories() {
 }
 
 export function initCategoryDropTargets() {
-    const categories = document.querySelectorAll("#categoryList .category-item");
+    const categories = document.querySelectorAll("#categoryList .real-category");
     categories.forEach(cat => {
         cat.addEventListener("dragover", (e) => e.preventDefault());
         cat.addEventListener("drop", (e) => {

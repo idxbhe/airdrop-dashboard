@@ -7,10 +7,40 @@ import { getFaviconHtml, getRemainingMs } from './utils.js';
 import { showDetail } from './ui-detail.js';
 
 export function renderEntries(catId) {
-    const cat = dashboardData.find(c => c.id === catId);
+    let cat;
+    let isFilterView = false;
+
+    if (catId && catId.startsWith('filter_')) {
+        isFilterView = true;
+        const statusMap = {
+            'filter_eligable': 'ELIGABLE',
+            'filter_not_eligable': 'NOT ELIGABLE',
+            'filter_abandoned': 'ABANDONED'
+        };
+        const targetStatus = statusMap[catId];
+        
+        let filteredItems = [];
+        dashboardData.forEach(c => {
+            c.items.forEach(item => {
+                if (item.s === targetStatus) {
+                    filteredItems.push(item);
+                }
+            });
+        });
+
+        cat = { id: catId, title: targetStatus, items: filteredItems };
+    } else {
+        cat = dashboardData.find(c => c.id === catId);
+    }
+
     if (!cat) return;
 
     document.getElementById('currentCategoryName').textContent = cat.title;
+
+    const headerActions = document.querySelector('.panel-header div');
+    if (headerActions) {
+        headerActions.style.display = isFilterView ? 'none' : 'flex';
+    }
 
     const container = document.getElementById('entriesList');
     container.innerHTML = '';
@@ -26,15 +56,17 @@ export function renderEntries(catId) {
         setEntriesSortable(null);
     }
 
-    setEntriesSortable(Sortable.create(container, {
-        animation: 150,
-        handle: '.item-title',
-        onEnd: () => {
-            const newOrderIds = Array.from(container.children).map(el => el.dataset.id);
-            cat.items.sort((a, b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
-            saveData();
-        }
-    }));
+    if (!isFilterView) {
+        setEntriesSortable(Sortable.create(container, {
+            animation: 150,
+            handle: '.item-title',
+            onEnd: () => {
+                const newOrderIds = Array.from(container.children).map(el => el.dataset.id);
+                cat.items.sort((a, b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
+                saveData();
+            }
+        }));
+    }
 }
 
 export function createEntryElement(item) {
