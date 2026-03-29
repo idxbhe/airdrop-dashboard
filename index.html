@@ -168,6 +168,19 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="quickNoteModal" style="display: none;">
+        <div class="modal" style="width: 400px;">
+            <h3>QUICK NOTE</h3>
+            <input type="hidden" id="qnId">
+            <input type="text" id="qnTitle" placeholder="Title (Optional)">
+            <textarea id="qnContent" placeholder="Note content..." rows="6" class="mono-font" style="width: 100%; background: #1c1c1f; border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 6px; outline: none; resize: vertical; font-size: 13px;"></textarea>
+            <div class="modal-foot">
+                <button class="btn" onclick="closeModal('quickNoteModal')">CANCEL</button>
+                <button class="btn btn-accent" onclick="saveQuickNote()">SAVE</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

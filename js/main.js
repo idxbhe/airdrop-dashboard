@@ -5,7 +5,7 @@ import { initResizable, updateAllCountdowns, renderAll } from './ui-core.js';
 import { handleSearch, closeModal, exportData, importData } from './handlers-global.js';
 import { switchCategory, toggleCategoryEditMode, editCategory, deleteCategory, openCatModal, submitCat } from './handlers-category.js';
 import { toggleCheck, openEntryModal, handleSaveEntry, handleResetTypeChange, editCurrentItem, deleteCurrentItem, removeDuplicates } from './handlers-entry.js';
-import { toggleMarkdownMode, openNoteModal, toggleNoteEdit, saveNoteFromModal, toggleInlineNoteEdit, saveInlineNote, handleStatusChange } from './handlers-note.js';
+import { toggleMarkdownMode, openNoteModal, toggleNoteEdit, saveNoteFromModal, toggleInlineNoteEdit, saveInlineNote, handleStatusChange, openQuickNoteModal, saveQuickNote, editQuickNote, deleteQuickNote, copyQuickNote } from './handlers-note.js';
 import { initAuth, loginWithGoogle, logout, toggleUserDropdown } from './auth.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -76,3 +76,10 @@ window.saveNoteFromModal = saveNoteFromModal;
 window.toggleInlineNoteEdit = toggleInlineNoteEdit;
 window.saveInlineNote = saveInlineNote;
 window.handleStatusChange = handleStatusChange;
+
+// Global bindings fitur quick note
+window.openQuickNoteModal = openQuickNoteModal;
+window.saveQuickNote = saveQuickNote;
+window.editQuickNote = editQuickNote;
+window.deleteQuickNote = deleteQuickNote;
+window.copyQuickNote = copyQuickNote;

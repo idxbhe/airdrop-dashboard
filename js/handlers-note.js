@@ -135,3 +135,114 @@ export function handleStatusChange(id, newStatus) {
         });
     });
 }
+
+// QUICK NOTES
+export function openQuickNoteModal(id = null) {
+    const qnIdInput = document.getElementById('qnId');
+    const qnTitleInput = document.getElementById('qnTitle');
+    const qnContentInput = document.getElementById('qnContent');
+    
+    if (qnIdInput) qnIdInput.value = id || '';
+    if (qnTitleInput) qnTitleInput.value = '';
+    if (qnContentInput) qnContentInput.value = '';
+
+    if (id) {
+        import('./state.js').then(({ dashboardData }) => {
+            const qnCat = dashboardData.find(c => c.id === 'CAT_QUICK_NOTES');
+            if (qnCat) {
+                const note = qnCat.items.find(n => n.id === id);
+                if (note) {
+                    if (qnTitleInput) qnTitleInput.value = note.t || '';
+                    if (qnContentInput) qnContentInput.value = note.n || '';
+                }
+            }
+        });
+    }
+
+    const modal = document.getElementById('quickNoteModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+export function saveQuickNote() {
+    const id = document.getElementById('qnId').value;
+    const title = document.getElementById('qnTitle').value.trim();
+    const content = document.getElementById('qnContent').value.trim();
+
+    if (!content) {
+        import('./ui-dialog.js').then(({ customAlert }) => {
+            customAlert('Note content cannot be empty.');
+        });
+        return;
+    }
+
+    import('./state.js').then(({ dashboardData, saveData, currentCategoryId }) => {
+        let qnCat = dashboardData.find(c => c.id === 'CAT_QUICK_NOTES');
+        if (!qnCat) {
+            qnCat = { id: 'CAT_QUICK_NOTES', title: 'QUICK NOTES', items: [] };
+            dashboardData.push(qnCat);
+        }
+
+        if (id) {
+            const note = qnCat.items.find(n => n.id === id);
+            if (note) {
+                note.t = title;
+                note.n = content;
+            }
+        } else {
+            qnCat.items.push({
+                id: 'qn_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+                t: title,
+                n: content
+            });
+        }
+
+        saveData();
+        const modal = document.getElementById('quickNoteModal');
+        if (modal) modal.style.display = 'none';
+        
+        // Refresh UI
+        import('./ui-core.js').then(({ renderAll }) => {
+            renderAll();
+        });
+    });
+}
+
+export function editQuickNote(id, e) {
+    if (e) e.stopPropagation();
+    openQuickNoteModal(id);
+}
+
+export function deleteQuickNote(id, e) {
+    if (e) e.stopPropagation();
+    import('./ui-dialog.js').then(({ customConfirm }) => {
+        customConfirm('Are you sure you want to delete this quick note?').then(confirmed => {
+            if (confirmed) {
+                import('./state.js').then(({ dashboardData, saveData }) => {
+                    const qnCat = dashboardData.find(c => c.id === 'CAT_QUICK_NOTES');
+                    if (qnCat) {
+                        qnCat.items = qnCat.items.filter(n => n.id !== id);
+                        saveData();
+                        import('./ui-core.js').then(({ renderAll }) => {
+                            renderAll();
+                        });
+                    }
+                });
+            }
+        });
+    });
+}
+
+export function copyQuickNote(id, e) {
+    if (e) e.stopPropagation();
+    import('./state.js').then(({ dashboardData }) => {
+        const qnCat = dashboardData.find(c => c.id === 'CAT_QUICK_NOTES');
+        if (qnCat) {
+            const note = qnCat.items.find(n => n.id === id);
+            if (note && note.n) {
+                import('./utils.js').then(({ copyToClipboard }) => {
+                    copyToClipboard(note.n);
+                });
+            }
+        }
+    });
+}

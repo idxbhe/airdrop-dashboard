@@ -79,9 +79,19 @@ export function repairData() {
         }
     }
 
+    // Ensure Quick Notes category exists
+    let qnCat = dashboardData.find(c => c.id === 'CAT_QUICK_NOTES');
+    if (!qnCat) {
+        dashboardData.push({
+            id: 'CAT_QUICK_NOTES',
+            title: 'QUICK NOTES',
+            items: []
+        });
+    }
+
     // Remove legacy default categories if they exist (they are now virtual filters)
     const defaultCats = ["NOT ELIGABLE", "ABANDONED", "ELIGABLE"];
-    dashboardData = dashboardData.filter(cat => !defaultCats.includes(cat.title));
+    dashboardData = dashboardData.filter(cat => !defaultCats.includes(cat.title) || cat.id === 'CAT_QUICK_NOTES');
 
     dashboardData.forEach(cat => {
         if (!cat.title) cat.title = "General";

@@ -23,6 +23,7 @@ export function toggleCategoryEditMode() {
 
 export async function editCategory(id, e) {
     if (e) e.stopImmediatePropagation();
+    if (id === 'CAT_QUICK_NOTES') return; // Cannot rename Quick Notes
     const cat = dashboardData.find(c => c.id === id);
     if (!cat) return;
     const newTitle = await customPrompt('Rename category:', cat.title);
@@ -35,18 +36,16 @@ export async function editCategory(id, e) {
 
 export async function deleteCategory(id, e) {
     if (e) e.stopImmediatePropagation();
-    const isLast = dashboardData.length === 1;
-    const confirmed = await customConfirm(isLast ? 'This is the last category. Delete and create a new "General" category?' : 'Delete this category and all its entries?', 'Confirmation', true);
+    if (id === 'CAT_QUICK_NOTES') return; // Cannot delete Quick Notes
+    const isLast = dashboardData.length <= 2; // Quick Notes is always there, so if 2 or less, it's effectively the last real category
+    const confirmed = await customConfirm('Delete this category and all its entries?', 'Confirmation', true);
     if (!confirmed) return;
 
-    if (isLast) {
-        dashboardData.length = 0;
-        dashboardData.push({ id: Date.now().toString(), title: "General", items: [] });
-        setCurrentCategoryId(dashboardData[0].id);
-    } else {
-        const index = dashboardData.findIndex(c => c.id === id);
-        if (index > -1) dashboardData.splice(index, 1);
+    const index = dashboardData.findIndex(c => c.id === id);
+    if (index > -1) {
+        dashboardData.splice(index, 1);
         
+        // If we deleted the current category, switch to the first available one
         if (currentCategoryId === id && dashboardData.length > 0) {
             setCurrentCategoryId(dashboardData[0].id);
         }

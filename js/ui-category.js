@@ -10,6 +10,8 @@ export function renderCategories() {
     ul.innerHTML = '';
 
     dashboardData.forEach(cat => {
+        if (cat.id === 'CAT_QUICK_NOTES') return;
+
         const li = document.createElement('li');
         li.className = `category-item real-category ${cat.id === currentCategoryId ? 'active' : ''}`;
         li.dataset.id = cat.id;
@@ -66,26 +68,69 @@ export function renderCategories() {
         { id: 'filter_abandoned', title: 'ABANDONED', count: countAbandoned, color: '#ffc107' }
     ];
 
+    const filterLi = document.createElement('li');
+    filterLi.style.listStyle = 'none';
+    filterLi.style.padding = '4px 16px 12px 16px';
+    
+    const isFilterActive = currentCategoryId && currentCategoryId.startsWith('filter_');
+    
+    let selectHtml = `
+        <div style="position: relative;">
+            <select class="filter-dropdown" style="width: 100%; background: #1a1a1d; border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; outline: none; cursor: pointer; appearance: none; font-weight: 600; font-size: 11px; transition: border 0.2s;">
+                <option value="" ${!isFilterActive ? 'selected' : ''} disabled>-- Choose Filter --</option>
+    `;
+    
     virtualCats.forEach(vCat => {
-        const li = document.createElement('li');
-        li.className = `category-item virtual-category ${vCat.id === currentCategoryId ? 'active' : ''}`;
-        li.dataset.id = vCat.id;
-
-        if (isCategoryEditMode) {
-            li.innerHTML = `
-                <span class="category-item-title" style="flex:1; color: ${vCat.color};">${vCat.title}</span>
-            `;
-            li.style.cursor = "pointer";
-            li.onclick = () => window.switchCategory(vCat.id);
-        } else {
-            li.innerHTML = `
-                <span class="category-item-title" title="${vCat.title}" style="color: ${vCat.color};">${vCat.title}</span>
-                <span class="item-count">${vCat.count}</span>
-            `;
-            li.onclick = () => window.switchCategory(vCat.id);
-        }
-        ul.appendChild(li);
+        const selected = currentCategoryId === vCat.id ? 'selected' : '';
+        selectHtml += `<option value="${vCat.id}" ${selected}>${vCat.title} (${vCat.count})</option>`;
     });
+    
+    selectHtml += `
+            </select>
+            <div style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 10px; color: var(--text-dim);">▼</div>
+        </div>
+    `;
+    
+    filterLi.innerHTML = selectHtml;
+    
+    const selectEl = filterLi.querySelector('select');
+    selectEl.addEventListener('focus', () => selectEl.style.borderColor = 'var(--accent)');
+    selectEl.addEventListener('blur', () => selectEl.style.borderColor = 'var(--border)');
+    selectEl.addEventListener('change', (e) => {
+        if (e.target.value) {
+            window.switchCategory(e.target.value);
+        }
+    });
+    
+    if (isCategoryEditMode) {
+        filterLi.style.opacity = '0.5';
+        selectEl.disabled = true;
+    }
+    
+    ul.appendChild(filterLi);
+
+    // QUICK NOTES
+    const qnDivider = document.createElement('li');
+    qnDivider.style.listStyle = 'none';
+    qnDivider.innerHTML = `
+        <div style="margin-top: 8px; border-top: 1px solid var(--border); padding: 12px 16px 4px 16px; font-size: 11px; font-weight: 700; color: var(--text-dim); letter-spacing: 1px;">
+            MISC
+        </div>
+    `;
+    ul.appendChild(qnDivider);
+
+    let qnCat = dashboardData.find(c => c.id === 'CAT_QUICK_NOTES');
+    if (qnCat) {
+        const li = document.createElement('li');
+        li.className = `category-item ${qnCat.id === currentCategoryId ? 'active' : ''}`;
+        li.dataset.id = qnCat.id;
+        li.innerHTML = `
+            <span class="category-item-title" title="${qnCat.title}">${qnCat.title}</span>
+            <span class="item-count">${qnCat.items.length}</span>
+        `;
+        li.onclick = () => window.switchCategory(qnCat.id);
+        ul.appendChild(li);
+    }
 
     initCategoryDropTargets();
 

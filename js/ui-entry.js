@@ -9,6 +9,7 @@ import { showDetail } from './ui-detail.js';
 export function renderEntries(catId) {
     let cat;
     let isFilterView = false;
+    let isQuickNoteView = false;
 
     if (catId && catId.startsWith('filter_')) {
         isFilterView = true;
@@ -29,6 +30,9 @@ export function renderEntries(catId) {
         });
 
         cat = { id: catId, title: targetStatus, items: filteredItems };
+    } else if (catId === 'CAT_QUICK_NOTES') {
+        isQuickNoteView = true;
+        cat = dashboardData.find(c => c.id === 'CAT_QUICK_NOTES');
     } else {
         cat = dashboardData.find(c => c.id === catId);
     }
@@ -39,17 +43,35 @@ export function renderEntries(catId) {
 
     const headerActions = document.querySelector('.panel-header div');
     if (headerActions) {
-        headerActions.style.display = isFilterView ? 'none' : 'flex';
+        if (isQuickNoteView) {
+            headerActions.style.display = 'flex';
+            headerActions.innerHTML = `
+                <button class="btn btn-accent btn-small" onclick="openQuickNoteModal()">➕ ADD QUICK NOTE</button>
+            `;
+        } else if (isFilterView) {
+            headerActions.style.display = 'none';
+        } else {
+            headerActions.style.display = 'flex';
+            headerActions.innerHTML = `
+                <button class="btn btn-small" onclick="removeDuplicates()" title="Remove duplicates in this category">🧹 REMOVE DUPLICATES</button>
+                <button class="btn btn-accent btn-small" onclick="openEntryModal()">➕ ADD ENTRY</button>
+            `;
+        }
     }
 
     const container = document.getElementById('entriesList');
     container.innerHTML = '';
 
-    const sortedItems = [...cat.items].sort((a, b) => getRemainingMs(a) - getRemainingMs(b));
-
-    sortedItems.forEach(item => {
-        container.appendChild(createEntryElement(item));
-    });
+    if (isQuickNoteView) {
+        cat.items.forEach(note => {
+            container.appendChild(createQuickNoteElement(note));
+        });
+    } else {
+        const sortedItems = [...cat.items].sort((a, b) => getRemainingMs(a) - getRemainingMs(b));
+        sortedItems.forEach(item => {
+            container.appendChild(createEntryElement(item));
+        });
+    }
 
     if (entriesSortable) {
         try { entriesSortable.destroy(); } catch(e) {}
@@ -59,7 +81,7 @@ export function renderEntries(catId) {
     if (!isFilterView) {
         setEntriesSortable(Sortable.create(container, {
             animation: 150,
-            handle: '.item-title',
+            handle: isQuickNoteView ? '.entry-main' : '.item-title',
             onEnd: () => {
                 const newOrderIds = Array.from(container.children).map(el => el.dataset.id);
                 cat.items.sort((a, b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
@@ -67,6 +89,37 @@ export function renderEntries(catId) {
             }
         }));
     }
+}
+
+export function createQuickNoteElement(note) {
+    const div = document.createElement('div');
+    div.className = `entry-item`;
+    div.dataset.id = note.id;
+
+    let fullNote = note.n || '';
+    let displayNote = fullNote;
+    if (displayNote.length > 80) {
+        displayNote = displayNote.substring(0, 50) + '...' + displayNote.substring(displayNote.length - 25);
+    }
+    displayNote = displayNote.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\\n/g, ' ');
+
+    div.innerHTML = `
+        <div class="entry-main" style="cursor: pointer;">
+            <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+                ${note.t ? `<span style="font-size: 10px; font-weight: 700; color: var(--accent);">${note.t}</span>` : ''}
+                <span style="font-family: monospace; font-size: 12px; color: var(--text);">${displayNote}</span>
+            </div>
+            <div class="entry-right" style="gap: 8px;">
+                <button onclick="copyQuickNote('${note.id}', event)" class="list-open-btn" style="padding: 4px 8px;">📋 Copy</button>
+                <button onclick="editQuickNote('${note.id}', event)" class="list-open-btn" style="padding: 4px 8px;">✏️ Edit</button>
+                <button onclick="deleteQuickNote('${note.id}', event)" class="list-open-btn text-danger" style="padding: 4px 8px; border-color: rgba(220, 53, 69, 0.2);">🗑️</button>
+            </div>
+        </div>
+    `;
+
+    div.onclick = () => window.editQuickNote(note.id);
+
+    return div;
 }
 
 export function createEntryElement(item) {
