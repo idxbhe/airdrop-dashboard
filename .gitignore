@@ -1,16 +1,52 @@
-js/config.js
+# Development files
+.env
+*.log
+*.tmp
 temp.js
+temp.md
+
+# API Keys & Secrets
+deepseek-api.txt
+msg.txt
+
+# Documentation & Notes (local only)
 promt.md
 todo.md
-temp.md
-js-modularization.md
 promt-cli.md
 GEMINI.md
+js-modularization.md
+
+# Windows specific
 Dashboard.lnk
 start-dashboard.bat
+Thumbs.db
+desktop.ini
+
+# AI Tools
 .aider.chat.history.md
 .aider.input.history
 .aider.tags.cache.v4/
-.env
-deepseek-api.txt
-msg.txt
+
+# Editor directories
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Netlify
+.netlify/
+netlify.log
+
+# Node modules (if added later)
+node_modules/
+package-lock.json
+yarn.lock

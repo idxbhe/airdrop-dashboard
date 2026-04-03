@@ -1,0 +1,21 @@
+{
+  "name": "airdrop-dashboard",
+  "version": "1.0.0",
+  "description": "Personal dashboard untuk tracking airdrop tasks dengan Firebase authentication",
+  "author": "idxbhe",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/idxbhe/airdrop-dashboard"
+  },
+  "keywords": [
+    "airdrop",
+    "dashboard",
+    "firebase",
+    "task-manager"
+  ],
+  "scripts": {
+    "dev": "python -m http.server 8080",
+    "start": "python -m http.server 8080"
+  }
+}

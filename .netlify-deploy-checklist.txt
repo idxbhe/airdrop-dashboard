@@ -1,0 +1,50 @@
+✅ DEPLOYMENT CHECKLIST - NETLIFY
+
+PRE-DEPLOYMENT:
+[✓] netlify.toml created (build & headers config)
+[✓] _redirects created (SPA routing)
+[✓] .gitignore updated (exclude sensitive files)
+[✓] package.json created (project metadata)
+[✓] README-DEPLOY.md created (deployment guide)
+
+FILES STRUCTURE:
+[✓] index.html (root)
+[✓] css/ folder (10 CSS files)
+[✓] js/ folder (7 JS files)
+[✓] js/config.js (Firebase configuration)
+
+DEPLOYMENT OPTIONS:
+
+1. NETLIFY DROP (Fastest):
+   → Go to: app.netlify.com/drop
+   → Drag & drop project folder
+   → Done!
+
+2. GIT DEPLOY (Recommended):
+   → git add .
+   → git commit -m "Ready for deployment"
+   → git push origin main
+   → Connect repository di Netlify dashboard
+
+3. NETLIFY CLI:
+   → npm install -g netlify-cli
+   → netlify login
+   → netlify deploy --prod
+
+POST-DEPLOYMENT:
+[ ] Test login functionality
+[ ] Add Netlify domain ke Firebase Console:
+    Firebase Console → Authentication → Settings → Authorized domains
+    Add: your-site-name.netlify.app
+[ ] Test all CRUD operations
+[ ] Test data import/export
+
+FIREBASE SETUP:
+- Firebase config sudah ada di js/config.js
+- API keys aman untuk public (client-side keys)
+- Setelah deploy, tambahkan domain Netlify ke Firebase Auth
+
+NOTES:
+- Static site (no build process needed)
+- All dependencies via CDN (Firebase, Sortable.js, Marked.js)
+- Environment variables (.env) tidak akan ter-deploy
