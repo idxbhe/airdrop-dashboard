@@ -40,7 +40,7 @@ export function openEntryModal(itemId = null) {
     const chkChecklistDiv = document.createElement('div');
     chkChecklistDiv.innerHTML = `
         <label class="label-tiny">Enable Checklist</label>
-        <input type="checkbox" id="enableChecklist" checked>
+        <input type="checkbox" id="enableChecklist">
     `;
     grid.appendChild(chkChecklistDiv);
 
@@ -73,6 +73,8 @@ export function openEntryModal(itemId = null) {
             <option value="weekly">Weekly (7 Days)</option>
             <option value="clock:07:00">Every 07.00 AM</option>
             <option value="monday:07:00">Every Monday (at 07.00 AM)</option>
+            <option value="saturday:07:00">Every Saturday (at 07.00 AM)</option>
+            <option value="sunday:07:00">Every Sunday (at 07.00 AM)</option>
             <option value="duration">Custom by Time</option>
             <option value="clock">Custom by Clock</option>
             <option value="day">Custom by Day</option>
@@ -157,7 +159,9 @@ export function openEntryModal(itemId = null) {
             if (r === 'daily') selectType.value = 'daily';
             else if (r === 'weekly') selectType.value = 'weekly';
             else if (r === 'clock:07:00') selectType.value = 'clock:07:00';
-            else if (r.startsWith('monday:')) selectType.value = 'monday:07:00';
+            else if (r.startsWith('monday:07:00')) selectType.value = 'monday:07:00';
+            else if (r.startsWith('saturday:07:00')) selectType.value = 'saturday:07:00';
+            else if (r.startsWith('sunday:07:00')) selectType.value = 'sunday:07:00';
             else if (r.startsWith('duration:')) {
                 selectType.value = 'duration';
                 const parts = r.slice(9).split(':').map(n => parseInt(n) || 0);
@@ -202,6 +206,8 @@ export async function handleSaveEntry() {
             else if (selType === 'weekly') resetType = 'weekly';
             else if (selType === 'clock:07:00') resetType = 'clock:07:00';
             else if (selType === 'monday:07:00') resetType = 'monday:07:00';
+            else if (selType === 'saturday:07:00') resetType = 'saturday:07:00';
+            else if (selType === 'sunday:07:00') resetType = 'sunday:07:00';
             else if (selType === 'duration') {
                 const h = parseInt(document.getElementById('durH').value) || 0;
                 const m = parseInt(document.getElementById('durM').value) || 0;
